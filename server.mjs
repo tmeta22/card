@@ -33,7 +33,12 @@ export function database(filename){
 }
 export function wallet(db,user){
  return {cards:db.prepare(`SELECT c.member,c.code,c.number,c.stamps,c.code IS NULL AS manual,coalesce(s.name,c.name) AS name,coalesce(s.category,c.category) AS category,s.target,s.reward FROM cards c LEFT JOIN shops s ON s.code=c.code WHERE c.customer=? ORDER BY c.rowid DESC`).all(user),
- shops:db.prepare('SELECT code,name,category,target,reward FROM shops WHERE owner=? ORDER BY rowid DESC').all(user),events:db.prepare('SELECT name,category,label,delta,at FROM events WHERE customer=? ORDER BY id DESC LIMIT 100').all(user)};
+ shops:db.prepare('SELECT code,name,category,target,reward,(SELECT COUNT(*) FROM cards WHERE cards.code=shops.code) AS members,(SELECT COUNT(*) FROM cards WHERE cards.code=shops.code AND stamps>=shops.target) AS ready,(SELECT COALESCE(SUM(stamps),0) FROM cards WHERE cards.code=shops.code) AS stamps FROM shops WHERE owner=? ORDER BY rowid DESC').all(user),events:db.prepare('SELECT name,category,label,delta,at FROM events WHERE customer=? ORDER BY id DESC LIMIT 100').all(user)};
+}
+export function preview(db,code){const shop=db.prepare('SELECT name,category,target,reward FROM shops WHERE code=?').get(String(code||'').toUpperCase());if(!shop)reject('Shop code not found.',404);return shop}
+export function lookup(db,owner,shop,member){
+ const card=db.prepare('SELECT c.member,c.stamps,s.target,s.reward,s.name,s.category FROM cards c JOIN shops s ON s.code=c.code WHERE c.member=? AND s.code=? AND s.owner=?').get(String(member||'').toUpperCase(),String(shop||''),owner);
+ if(!card)reject('Member not found in your program.',404);return card;
 }
 export function change(db,user,op,b){
  const request=field(b,'requestId',64);db.exec('BEGIN IMMEDIATE');
@@ -67,16 +72,20 @@ export function app(db){return createServer(async(req,res)=>{
  const msg=(await body(req)).message;if(msg?.chat.type==='private'&&msg.from.id===msg.chat.id){
  const user=String(msg.from.id),command=(msg.text||'').split(' ')[0].toLowerCase();
  if(command==='/english'||command==='/khmer')db.prepare('INSERT INTO languages(customer,lang) VALUES(?,?) ON CONFLICT(customer) DO UPDATE SET lang=excluded.lang').run(user,command==='/english'?'en':'km');
+ const joinCode=command==='/start'&&/^[A-F0-9]{14}$/i.test((msg.text||'').split(' ')[1]||'')?(msg.text.split(' ')[1]).toUpperCase():'';
  const khmer=db.prepare('SELECT lang FROM languages WHERE customer=?').get(user)?.lang!=='en';
  const cards=wallet(db,user).cards, digits=v=>khmer?String(v).replace(/\d/g,d=>'០១២៣៤៥៦៧៨៩'[d]):String(v);
  const summary=cards.slice(0,25).map(c=>c.name+' · '+(c.manual?c.number:digits(c.stamps)+'/'+digits(c.target)+(khmer?' ត្រា':' stamps'))).join('\n');
  const welcome=khmer?'សូមស្វាគមន៍មកកាន់ CardYeung។ បើកកាបូបកាត ដើម្បីចូលរួមកម្មវិធីរបស់ហាង ឬបង្កើតកម្មវិធីសន្សំត្រាផ្ទាល់ខ្លួន។':'Welcome to CardYeung. Open your wallet to join a shop or create a loyalty program.';
- await telegram('sendMessage',{chat_id:msg.chat.id,text:(summary||welcome)+'\n\n/khmer · /english',reply_markup:{inline_keyboard:[[{text:khmer?'កាបូបកាតរបស់ខ្ញុំ':'My wallet',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}]]}})}
+ await telegram('sendMessage',{chat_id:msg.chat.id,text:(summary||welcome)+'\n\n/khmer · /english',reply_markup:{inline_keyboard:[[{text:khmer?'កាបូបកាតរបស់ខ្ញុំ':'My wallet',web_app:{url:new URL('wallet/'+(joinCode?'?join='+joinCode:''),process.env.APP_URL).href}}]]}})}
  return json({ok:true});
  }
  if(path.startsWith('/api/')){
  const raw=req.headers.authorization||'';if(!raw.startsWith('tma '))reject('Open this wallet in Telegram.',401);const user=telegramUser(raw.slice(4),process.env.BOT_TOKEN);
- if(path==='/api/wallet'&&req.method==='GET')return json(wallet(db,user));if(req.method!=='POST')reject('Method not allowed.',405);
+ const query=new URL(req.url,'http://localhost').searchParams;
+ if(path==='/api/wallet'&&req.method==='GET')return json({...wallet(db,user),bot:/^\w{4,64}$/.test(process.env.BOT_USERNAME||'')?process.env.BOT_USERNAME:null});
+ if(path==='/api/preview'&&req.method==='GET')return json(preview(db,query.get('code')));
+ if(path==='/api/lookup'&&req.method==='GET')return json(lookup(db,user,query.get('shop'),query.get('member')));if(req.method!=='POST')reject('Method not allowed.',405);
  change(db,user,path.slice(5),await body(req));return json({ok:true});
  }
  if(req.method!=='GET'&&req.method!=='HEAD')reject('Method not allowed.',405);
