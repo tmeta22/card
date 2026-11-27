@@ -4,12 +4,16 @@ CardYeung is a free-to-use loyalty wallet for Telegram. The public GitHub Pages 
 
 ## Run
 
-Use Node.js 24 or newer. Run `npm start` and open http://localhost:4173/. Run `npm test` to check the loyalty and authentication flows. The application has no third-party npm dependencies.
+Use Node.js 24 or newer. Run `npm install`, then `npm start` and open http://localhost:4173/. Run `npm test` to check the loyalty, authentication, recovery and admin flows. Storage is PostgreSQL when `DATABASE_URL` is set (production) and a local SQLite file otherwise (`DB_FILE`, default `wallet.sqlite`). The only runtime dependency is `pg`; set `TEST_DATABASE_URL` to run the tests against Postgres.
+
+## Deploy to InstaCloud
+
+InstaCloud provides the Postgres database and the container host. With the `insta` CLI signed in and linked to a project (`npx -y insta@latest agent setup --create`), run `deploy/instacloud.sh` from the repo root. It creates a Postgres service and an always-on compute service, binds `DATABASE_URL`, prompts for `BOT_TOKEN`, `WEBHOOK_SECRET`, `ADMIN_PASSWORD` and `BOT_USERNAME`, builds the `Dockerfile` remotely and deploys. Then set `APP_URL` to the printed URL, run `insta compute restart` and register the bot with `node server.mjs --configure-bot`. `/healthz` checks the database connection.
 
 ## Connect Telegram
 
 1. Create a bot in BotFather. Store its token as the server environment variable `BOT_TOKEN`.
-2. Deploy the Node service behind HTTPS. Set `APP_URL` to its HTTPS origin including a trailing slash, `BOT_USERNAME` to the bot's username without `@` (used for join links), `WEBHOOK_SECRET` to a randomly generated secret (at least 16 URL-safe characters), and `DB_FILE` to a path on a persistent volume. Use a single service instance with persistent SQLite storage and backups.
+2. Deploy the Node service behind HTTPS. Set `APP_URL` to its HTTPS origin including a trailing slash, `BOT_USERNAME` to the bot's username without `@` (used for join links), `WEBHOOK_SECRET` to a randomly generated secret (at least 16 URL-safe characters), and `DATABASE_URL` to the Postgres connection string (`DB_FILE` is only for local SQLite). With Postgres the service can run more than one instance; with SQLite use a single instance on a persistent volume.
 3. Start the service with `node server.mjs`. Run `node server.mjs --configure-bot` once with the same environment to register the webhook and wallet menu.
 4. Start the bot in a private chat. The wallet button opens the authenticated mini app. Sending /wallet retrieves balances from the same database.
 5. In Shop studio create a program and share the join code. Customers add it to their wallet. Enter a customer's member code to award a stamp or redeem their completed card.
