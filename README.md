@@ -19,3 +19,5 @@ GitHub Pages serves static files from main /docs. Live Telegram sessions must us
 ## Card artwork
 
 Built-in ImageGen created the three photographic backgrounds in docs/wallet/assets. The prompt called for full-bleed, text-free commercial photography with each subject on the right and dark space for lettering on the left: a forest-green cappuccino, cobalt hex dumbbells, and burgundy cinema popcorn.
+
+Khmer is the default language. The landing page and mini app share a remembered language preference. In the bot, use /english or /khmer to switch reply language.

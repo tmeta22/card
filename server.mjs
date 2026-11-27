@@ -28,6 +28,7 @@ export function database(filename){
  CREATE TABLE IF NOT EXISTS cards(member TEXT PRIMARY KEY,customer TEXT NOT NULL,code TEXT REFERENCES shops(code),name TEXT,category TEXT,number TEXT,stamps INTEGER NOT NULL DEFAULT 0,UNIQUE(customer,code));
  CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY,customer TEXT NOT NULL,name TEXT NOT NULL,category TEXT NOT NULL,label TEXT NOT NULL,delta TEXT NOT NULL,at INTEGER NOT NULL);
  CREATE INDEX IF NOT EXISTS activity_feed ON events(customer,id);
+ CREATE TABLE IF NOT EXISTS languages(customer TEXT PRIMARY KEY,lang TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS requests(customer TEXT,request TEXT,PRIMARY KEY(customer,request));`);return db;
 }
 export function wallet(db,user){
@@ -64,8 +65,13 @@ export function app(db){return createServer(async(req,res)=>{
  if(path==='/telegram'&&req.method==='POST'){
  if(!process.env.WEBHOOK_SECRET||req.headers['x-telegram-bot-api-secret-token']!==process.env.WEBHOOK_SECRET)reject('Unauthorized.',403);
  const msg=(await body(req)).message;if(msg?.chat.type==='private'&&msg.from.id===msg.chat.id){
- const cards=wallet(db,String(msg.from.id)).cards;const summary=cards.slice(0,25).map(c=>c.name+' · '+(c.manual?c.number:c.stamps+'/'+c.target+' stamps')).join('\n');
- await telegram('sendMessage',{chat_id:msg.chat.id,text:summary||'Welcome to CardYeung. Open your wallet to join a shop or create a loyalty program.',reply_markup:{inline_keyboard:[[{text:'My wallet',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}]]}})}
+ const user=String(msg.from.id),command=(msg.text||'').split(' ')[0].toLowerCase();
+ if(command==='/english'||command==='/khmer')db.prepare('INSERT INTO languages(customer,lang) VALUES(?,?) ON CONFLICT(customer) DO UPDATE SET lang=excluded.lang').run(user,command==='/english'?'en':'km');
+ const khmer=db.prepare('SELECT lang FROM languages WHERE customer=?').get(user)?.lang!=='en';
+ const cards=wallet(db,user).cards, digits=v=>khmer?String(v).replace(/\d/g,d=>'០១២៣៤៥៦៧៨៩'[d]):String(v);
+ const summary=cards.slice(0,25).map(c=>c.name+' · '+(c.manual?c.number:digits(c.stamps)+'/'+digits(c.target)+(khmer?' ត្រា':' stamps'))).join('\n');
+ const welcome=khmer?'សូមស្វាគមន៍មកកាន់ CardYeung។ បើកកាបូបកាត ដើម្បីចូលរួមកម្មវិធីរបស់ហាង ឬបង្កើតកម្មវិធីសន្សំត្រាផ្ទាល់ខ្លួន។':'Welcome to CardYeung. Open your wallet to join a shop or create a loyalty program.';
+ await telegram('sendMessage',{chat_id:msg.chat.id,text:(summary||welcome)+'\n\n/khmer · /english',reply_markup:{inline_keyboard:[[{text:khmer?'កាបូបកាតរបស់ខ្ញុំ':'My wallet',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}]]}})}
  return json({ok:true});
  }
  if(path.startsWith('/api/')){
@@ -81,6 +87,7 @@ export function app(db){return createServer(async(req,res)=>{
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(process.argv.includes('--configure-bot')){
  if(!process.env.BOT_TOKEN||!/^https:\/\//.test(process.env.APP_URL||'')||!/^[-\w]{16,256}$/.test(process.env.WEBHOOK_SECRET||''))throw Error('Set BOT_TOKEN, HTTPS APP_URL and WEBHOOK_SECRET (16–256 letters, digits, underscores or hyphens).');
- await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'My wallet',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});console.log('Telegram webhook and wallet menu configured.');
+ await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});console.log('Telegram webhook and wallet menu configured.');
  }else{const port=Number(process.env.PORT||4173);app(database(process.env.DB_FILE||'wallet.sqlite')).listen(port,()=>console.log('CardYeung listening on http://localhost:'+port))}
 }
+

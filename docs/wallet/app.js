@@ -10,7 +10,7 @@ const uid=()=>crypto.randomUUID().replaceAll('-','').slice(0,12).toUpperCase();
 function notify(msg){$('toast').textContent=msg;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').textContent='',3600)}
 async function api(path,data){const res=await fetch('/api/'+path,{method:data?'POST':'GET',headers:{'Content-Type':'application/json','Authorization':'tma '+tg.initData},body:data?JSON.stringify(data):undefined});if(!res.ok)throw Error((await res.json()).error||'Please try again.');return res.json()}
 async function refresh(){if(!live)return;state=await api('wallet');loaded=true;render()}
-function date(at){return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(at))}
+function date(at){return new Intl.DateTimeFormat(language==='km'?'km-KH':'en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(at))}
 function artwork(c){const [art,ico]=types[c.category]||types.Other;return '<div class="art '+art+'" style="--img:url(./assets/'+(art==='other'?'coffee':art)+'.jpg)"><div class="topline"><span class="cardicon">'+icon(ico)+'</span><span class="cardtype">Loyalty pass</span></div><div><h3>'+esc(c.name)+'</h3><div class="stampcount">'+(c.manual?'Membership card':c.stamps+' / '+c.target+' stamps')+'</div>'+(c.manual?'':'<div class="marks">'+Array.from({length:Math.min(c.target,15)},(_,i)=>'<b class="'+(i<c.stamps/c.target*Math.min(c.target,15)?'on':'')+'"></b>').join('')+'</div>')+'</div></div>'}
 function tile(c){return '<button class="tile" data-card="'+esc(c.member)+'">'+artwork(c)+'<div class="cardfoot"><span>'+icon(c.manual?'cards':'gift')+esc(c.manual?'Show membership':c.reward)+'</span>'+icon('chev')+'</div></button>'}
 function events(all){const list=all?state.events:state.events.slice(0,3);return list.length?'<div class="activity">'+list.map(e=>'<div class="activityrow"><div class="row"><i class="symbol '+({Coffee:'mint',Entertainment:'peach'}[e.category]||'')+'">'+icon((types[e.category]||types.Other)[1])+'</i><span><strong>'+esc(e.name)+'</strong><small>'+esc(e.label)+' · '+date(e.at)+'</small></span></div><span class="badge">'+esc(e.delta)+'</span></div>').join('')+'</div>':'<div class="empty">Your card activity will appear here.</div>'}
@@ -30,7 +30,7 @@ function render(){
 }
 function modal(html){$('inside').innerHTML=html;$('modal').showModal()}
 function input(label,name,max=60){return '<label>'+label+'<input required maxlength="'+max+'" name="'+name+'"></label>'}
-function select(){return '<label>Category<select name="category">'+Object.keys(types).map(c=>'<option>'+c+'</option>').join('')+'</select></label>'}
+function select(){return '<label>Category<select name="category">'+Object.keys(types).map(c=>'<option value="'+c+'">'+c+'</option>').join('')+'</select></label>'}
 function form(op,fields,label,extra=''){return '<form data-form="'+op+'" data-extra="'+esc(extra)+'">'+fields+'<span class="err" role="alert"></span><button class="btn">'+label+'</button></form>'}
 function openAction(a){
  if(a==='close')return $('modal').close();
@@ -49,4 +49,5 @@ function localChange(op,b){let c,s;if(op==='create'){state.shops.push({...b,code
 document.addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;const f=e.target,b=Object.fromEntries(new FormData(f));for(const k in b)b[k]=b[k].trim();b.shop=f.dataset.extra;if(b.code)b.code=b.code.toUpperCase();if(b.member)b.member=b.member.toUpperCase();f.querySelector('button').disabled=true;try{if(Object.entries(b).some(([k,v])=>k!=='shop'&&!v))throw Error('Please complete every field.');if(live){await api(f.dataset.form,{...b,requestId:f.dataset.key||(f.dataset.key=crypto.randomUUID())});await refresh()}else{localChange(f.dataset.form,b);localStorage.setItem(storage,JSON.stringify(state))}category='All cards';query='';$('modal').close();render();notify('Saved successfully')}catch(err){f.querySelector('.err').textContent=err.message}finally{busy=false;f.querySelector('button').disabled=false}});
 document.querySelectorAll('[data-icon]').forEach(e=>e.innerHTML=icon(e.dataset.icon));
 render();if(live){tg.ready();tg.expand();$('member').textContent=tg.initDataUnsafe?.user?.first_name||'Member';document.querySelector('.avatar').textContent=$('member').textContent.charAt(0);$('mode').textContent='Telegram wallet';refresh().catch(e=>{$('page').textContent=e.message});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(e=>notify(e.message))});setInterval(()=>{if(!document.hidden&&!busy)refresh().catch(()=>{})},30000)}
+
 
