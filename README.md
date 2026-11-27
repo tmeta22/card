@@ -4,7 +4,7 @@ CardYeung is a free-to-use loyalty wallet for Telegram. The public GitHub Pages 
 
 ## Run
 
-Use Node.js 24 or newer. Run `npm install`, then `npm start` and open http://localhost:4173/. Run `npm test` to check the loyalty, authentication, recovery and admin flows. Storage is PostgreSQL when `DATABASE_URL` is set (production) and a local SQLite file otherwise (`DB_FILE`, default `wallet.sqlite`). The only runtime dependency is `pg`; set `TEST_DATABASE_URL` to run the tests against Postgres.
+Use Node.js 22.5 or newer (the container uses 24). Run `npm install`, then `npm start` and open http://localhost:4173/. Run `npm test` to check the loyalty, authentication, recovery and admin flows. Storage is PostgreSQL when `DATABASE_URL` is set (production) and a local SQLite file otherwise (`DB_FILE`, default `wallet.sqlite`). The only runtime dependency is `pg`; set `TEST_DATABASE_URL` to run the tests against Postgres.
 
 ## Deploy to InstaCloud
 
