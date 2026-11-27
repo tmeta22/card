@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>CardYeung · Admin</title>
+<style>
+:root{--ink:#131313;--mute:#8c8c93;--bg:#f6f6f7;--line:#e9e9ec;--mint:#cfe5df;--bar:#2f6b5a;--lav:#ead9f4;--peach:#fbe2bd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.45 Urbanist,"DM Sans",system-ui,sans-serif}
+button,input{font:inherit}main{max-width:1100px;margin:auto;padding:28px 20px 60px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}h1{font-size:30px;letter-spacing:-1px;margin:0;font-weight:600}h1 i{font-style:normal;color:#c4c4c9}
+.btn{height:44px;border-radius:22px;border:0;background:var(--ink);color:#fff;padding:0 22px;font-weight:700;cursor:pointer}.btn.line{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.login{max-width:360px;margin:15vh auto;background:#fff;border-radius:30px;padding:28px;box-shadow:0 20px 50px -30px #0004}.login h1{margin-bottom:6px}.login p{color:var(--mute);margin:0 0 18px}
+.login input{width:100%;height:52px;border-radius:18px;border:1.5px solid var(--line);padding:0 16px;margin-bottom:12px}.err{color:#b3261e;min-height:22px;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}.kpi{border-radius:26px;padding:18px 20px;background:#fff}.kpi.mint{background:var(--mint)}.kpi.lav{background:var(--lav)}.kpi.peach{background:var(--peach)}
+.kpi small{display:block;color:#5a5a62;font-weight:600}.kpi b{display:block;font-size:42px;letter-spacing:-2px;line-height:1.15;font-weight:600}.kpi span{font-size:13px;color:#5a5a62}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}@media(max-width:760px){.row{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:26px;padding:20px}.card h2{font-size:18px;margin:0 0 4px;font-weight:600}.card p{margin:0 0 10px;color:var(--mute);font-size:13px}
+svg{width:100%;height:auto;display:block}.axis{fill:var(--mute);font-size:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;color:var(--mute);font-weight:600;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}td{padding:10px 8px;border-bottom:1px solid var(--line)}tr:last-child td{border:0}.num{text-align:right;font-variant-numeric:tabular-nums}.wrap{overflow-x:auto}
+.foot{color:var(--mute);font-size:12px;margin-top:16px}
+</style></head><body><main id="app"></main>
+<script>
+const $=document.getElementById('app'),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';'),nf=new Intl.NumberFormat();
+const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+function login(msg=''){$.innerHTML='<form class="login"><h1>Admin <i>portal</i></h1><p>CardYeung usage overview.</p><input type="password" name="p" placeholder="Admin password" autocomplete="current-password" required autofocus><div class="err">'+esc(msg)+'</div><button class="btn" style="width:100%">Sign in</button></form>';
+ $.querySelector('form').onsubmit=async e=>{e.preventDefault();const r=await fetch('/admin/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:e.target.p.value})});r.ok?load():login((await r.json()).error)}}
+function bars(data,label){const W=520,H=150,max=Math.max(1,...data.map(x=>x.n)),bw=W/data.length;
+ return '<svg viewBox="0 0 '+W+' '+(H+18)+'" role="img" aria-label="'+label+'">'+data.map((x,i)=>{const h=x.n/max*(H-8);return '<rect x="'+(i*bw+1.5)+'" y="'+(H-h)+'" width="'+(bw-3)+'" height="'+Math.max(h,x.n?2:1)+'" rx="2" fill="'+(x.n?'var(--bar)':'#dfe7e4')+'"><title>'+x.d+': '+x.n+'</title></rect>'}).join('')+'<text class="axis" x="0" y="'+(H+14)+'">'+data[0].d.slice(5)+'</text><text class="axis" x="'+W+'" y="'+(H+14)+'" text-anchor="end">'+data.at(-1).d.slice(5)+'</text><text class="axis" x="'+W+'" y="9" text-anchor="end">max '+max+'</text></svg>'}
+const kpi=(t,v,s,c='')=>'<div class="kpi '+c+'"><small>'+t+'</small><b>'+nf.format(v)+'</b><span>'+s+'</span></div>';
+async function load(){const r=await fetch('/admin/api/stats');if(r.status===401)return login();if(!r.ok)return login((await r.json()).error);const d=await r.json(),u=d.users;
+ $.innerHTML='<header><h1>Admin <i>portal</i></h1><button class="btn line" id="out">Refresh</button></header><div class="kpis">'+kpi('Total users',u.total,'+'+u.new1+' today · +'+u.new7+' this week · +'+u.new30+' this month','mint')+kpi('Active (7 days)',u.active7,nf.format(u.active1)+' today · '+nf.format(u.active30)+' in 30 days','lav')+kpi('Shop owners',d.shops.owners,nf.format(d.shops.programs)+' programs','peach')+kpi('Cards in wallets',d.cards.program+d.cards.manual,nf.format(d.cards.manual)+' saved memberships')+kpi('Stamps given',d.cards.stampEvents,nf.format(d.cards.redemptions)+' rewards redeemed')+kpi('Recovery set up',u.withRecovery,nf.format(u.recovered)+' accounts recovered')+'</div>'+
+ '<div class="row"><div class="card"><h2>New users</h2><p>Last 30 days</p>'+bars(d.signups,'New users per day')+'</div><div class="card"><h2>Stamps given</h2><p>Last 30 days</p>'+bars(d.stamps,'Stamps per day')+'</div></div>'+
+ '<div class="row"><div class="card wrap"><h2>Newest users</h2><p>Telegram IDs are masked.</p><table><tr><th>Account</th><th>Telegram</th><th>Joined</th><th>Last seen</th><th class="num">Cards</th><th class="num">Shops</th></tr>'+d.recent.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.tg)+'</td><td>'+ago(x.created)+'</td><td>'+ago(x.seen)+'</td><td class="num">'+x.cards+'</td><td class="num">'+x.shops+'</td></tr>').join('')+'</table></div><div class="card wrap"><h2>Top programs</h2><p>By members</p><table><tr><th>Program</th><th>Category</th><th class="num">Members</th></tr>'+(d.top.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.category)+'</td><td class="num">'+x.members+'</td></tr>').join('')||'<tr><td colspan="3">No programs yet.</td></tr>')+'</table></div></div><p class="foot">Updated '+new Date().toLocaleTimeString()+'</p>';
+ document.getElementById('out').onclick=load}
+load();
+</script></body></html>
