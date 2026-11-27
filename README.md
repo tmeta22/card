@@ -16,6 +16,12 @@ Use Node.js 24 or newer. Run `npm start` and open http://localhost:4173/. Run `n
 
 GitHub Pages serves static files from main /docs. Live Telegram sessions must use the HTTPS Node service. Credentials belong only on the server. Browsing outside Telegram uses fictional sample shops and browser-local storage. Saved existing membership numbers are display-only. No subscriptions or merchant fees are implemented. Hosting costs depend on the operator's provider.
 
+## Accounts, recovery and admin
+
+Sign-up needs no form: the first time someone opens the mini app, their signed Telegram identity creates the account. A welcome sheet then issues a one-time **recovery code** (stored only as a salted scrypt hash). If the person loses their Telegram account, they open the app from a new one, choose *I already have an account* and enter the code; their cards, rewards and shops move over, the old account is retired and a new code is issued. Wrong guesses are limited to 8 an hour per account.
+
+The admin portal is at `/admin/`. Set `ADMIN_PASSWORD` (12+ characters; optionally `ADMIN_SECRET` to sign the session cookie) on the server. It shows total, new and active users (24 h / 7 d / 30 d), shop owners, cards, stamps, redemptions, recovery adoption, daily sign-up and stamp charts, the newest users (Telegram IDs masked) and the top programs. Without `ADMIN_PASSWORD` it stays disabled.
+
 ## How shop owners use it
 
 Owners need no separate app or account. Every Telegram user can open **Shop studio** in the same mini app.

@@ -98,3 +98,4 @@ form input,select{width:100%;height:52px;padding:0 16px;border-radius:18px;borde
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media(max-width:360px){h1{font-size:36px}.total strong,.total i{font-size:50px}.p-brand{font-size:20px}.p-no{font-size:18px}}
 html:lang(km) h1{font-size:30px;line-height:1.5;letter-spacing:0}html:lang(km) .head h1{font-size:34px}html:lang(km) .big small{margin-left:8px}html:lang(km) .sec h2{font-size:25px}html:lang(km) .p-brand{font-size:20px;letter-spacing:0}html:lang(km) dialog h2{font-size:23px;line-height:1.5}html:lang(km) .tx-n{font-size:17px;line-height:1.6}html:lang(km) .hero p,html:lang(km) .tag,html:lang(km) .pill,html:lang(km) .btn{line-height:1.7}
+dialog[data-lock] .x{display:none}

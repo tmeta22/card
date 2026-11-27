@@ -31,7 +31,7 @@ function miniBars(c){if(!c||c.manual)return '';const n=Math.min(c.target,12);con
 // ---------- screens ----------
 function nav(){const items=[['My wallet','cards'],['My rewards','gift'],['Activity','chart'],['Shop studio','store']];
  $('dock').innerHTML=items.map(([n,i])=>'<button class="'+(page===n?'on':'')+'" data-action="'+n+'" aria-label="'+n+'">'+icon(i)+'</button>').join('')}
-function bar(){const photo=tg?.initDataUnsafe?.user?.photo_url,avatar='<span class="av" '+(photo?'style="background-image:url('+esc(photo)+')"':'')+'>'+(photo?'':esc(holder()).charAt(0))+'</span>';
+function bar(){const photo=tg?.initDataUnsafe?.user?.photo_url,avatar='<button class="av" data-action="account" aria-label="Account" '+(photo?'style="background-image:url('+esc(photo)+')"':'')+'>'+(photo?'':esc(holder()).charAt(0))+'</button>';
  $('barL').innerHTML=page==='My wallet'?avatar+'<button class="circle" data-action="add" aria-label="Add card">'+icon('plus')+'</button>':'<button class="circle" data-action="My wallet" aria-label="Back">'+icon('back')+'</button>';
  $('barR').innerHTML=page==='My wallet'?'<button class="circle" data-action="scan" aria-label="Scan QR">'+icon('scan')+'</button>':avatar+'<button class="circle" data-action="add" aria-label="Add card">'+icon('plus')+'</button>'}
 function home(){const real=state.cards.filter(c=>!c.manual),have=real.reduce((n,c)=>n+Math.min(c.stamps,c.target),0),need=real.reduce((n,c)=>n+c.target,0),ready=real.filter(isReady).length;
@@ -89,39 +89,49 @@ async function openJoin(code){try{const s=live?await api('preview?code='+encodeU
 async function openCustomer(shop,code){try{const c=live?await api('lookup?shop='+encodeURIComponent(shop)+'&member='+encodeURIComponent(code)):state.cards.find(x=>x.member===code&&x.code===shop);if(!c)throw Error('Member not found in your program.');modalKey=crypto.randomUUID();const ready=c.stamps>=c.target;
  modal('<h2>Customer card</h2><p>'+esc(c.name)+'</p><div class="cust"><b>'+num(c.stamps)+' / '+num(c.target)+' stamps</b><span class="meter"><i style="width:'+Math.min(100,c.stamps/c.target*100)+'%"></i></span><small>'+esc(c.reward)+'</small></div><span class="err" role="alert"></span><button class="btn" data-confirm="'+(ready?'redeem':'stamp')+'" data-shop="'+esc(shop)+'" data-member="'+esc(code)+'">'+icon(ready?'gift':'stamp')+(ready?'Redeem reward':'Award stamp')+'</button>')}catch(e){notify(e.message)}}
 function openAction(a){
- if(a==='close')return $('modal').close();
+ if(a==='close'){delete $('modal').dataset.lock;return $('modal').close()}
  if(['My wallet','My rewards','Activity','Shop studio'].includes(a))return go(a);
  modalKey='';
  if(a==='add')modal('<h2>Add a card</h2><p>Scan the shop’s QR code, or type its join code.</p>'+(tg?.showScanQrPopup?'<button class="btn" data-action="scan">'+icon('scan')+'Scan QR</button><hr>':'')+form('join',input('Shop join code','code',30),'Join program')+'<hr><button class="textbtn" data-action="manual">Save an existing membership card</button>');
  if(a==='scan'&&!scanQr('Point the camera at a shop’s join QR.',openJoin))openAction('add');
+ if(a==='recoverform'){$('modal').close();delete $('modal').dataset.lock;modal(recoverForm())}
  if(a==='manual'){$('modal').close();modal('<h2>Save membership</h2>'+form('manual',input('Shop name','name')+select()+input('Membership number','number',64),'Save card'))}
+ if(a==='account')openAccount();
  if(a==='create')modal('<h2>Create program</h2>'+form('create',input('Shop name','name')+select()+input('Reward','reward')+'<label>Stamps per reward<input required name="target" type="number" inputmode="numeric" min="2" max="50" value="10"></label>','Create program'));
 }
+const recoveryView=(code,first)=>'<h2>Your recovery code</h2><p>Keep it somewhere safe, such as Saved Messages. If you lose this Telegram account, enter it from a new one to bring your cards and shops back. It is shown only once.</p><b class="code recovery">'+esc(code)+'</b><div class="pillrow"><button class="pill line" data-copytext="'+esc(code)+'">'+icon('copy')+'Copy code</button></div><button class="btn" style="margin-top:14px" data-action="close">'+(first?'I saved it':'Done')+'</button>';
+const recoverForm=()=>'<h2>Recover my account</h2><p>Enter the recovery code from your old account. Its cards, rewards and shops move to this Telegram account.</p>'+form('recover',input('Recovery code','code',50),'Recover account');
+async function newRecovery(first){try{const {code}=await api('account/recovery',{});await refresh();modal(recoveryView(code,first))}catch(e){notify(e.message)}}
+function openWelcome(){modal('<h2>Welcome to CardYeung</h2><p>Your account is created from your Telegram profile, so there is nothing to type. Create a recovery code now so you can restore your cards if you ever lose access.</p><button class="btn" data-newrecovery="first">'+icon('check')+'Create my recovery code</button><hr><button class="textbtn" data-action="recoverform">I already have an account</button>');$('modal').dataset.lock='1'}
+function openAccount(){if(!live)return modal('<h2>Telegram account</h2><p>You are exploring a sample wallet on this device. Open the configured CardYeung bot and choose My wallet to use your Telegram account.</p>');
+ modal('<h2>'+esc(holder())+'</h2><p>Account <b>'+esc(state.account?.id||'')+'</b></p><button class="btn" data-newrecovery="">'+icon('check')+(state.account?.recovery?'New recovery code':'Create recovery code')+'</button><hr><button class="textbtn" data-action="recoverform">Recover another account</button>')}
 async function share(code){const url=linkFor(code),shop=state.shops.find(s=>s.code===code);
  if(tg?.openTelegramLink)return tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(shop?.name||''));
  if(navigator.share)try{return await navigator.share({title:shop?.name,url})}catch{}
  copy(url)}
-async function copy(text){try{await navigator.clipboard.writeText(text);notify('Link copied')}catch{notify(text)}}
+async function copy(text){try{await navigator.clipboard.writeText(text);notify(text.startsWith('http')?'Link copied':'Code copied')}catch{notify(text)}}
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.action)openAction(d.action);if(d.cat){category=d.cat;render()}if(d.tab){tab=d.tab;render()}if(d.range){range=d.range;render()}if(d.month!==undefined){monthBack=+d.month;render()}
  if(d.card){const c=state.cards.find(x=>x.member===d.card);if(!c||b.closest('#modal'))return;const code=c.number||c.member;
   modal('<h2>Card details</h2><p>'+esc(c.manual?'Show this membership number at checkout.':isReady(c)?'Your reward is ready. Show this code at checkout.':'Show your member code to collect a stamp.')+'</p>'+stack([c],true)+'<div class="qrbox">'+qrSvg(code,{margin:1})+'</div><small class="muted" style="display:block;text-align:center;color:var(--soft)">Member code</small><b class="code">'+esc(code)+'</b>'+(!c.manual?'<p style="text-align:center">'+esc(c.reward)+' · '+num(c.target)+' stamps</p>':''))}
  if(d.qr){const s=state.shops.find(x=>x.code===d.qr);modal('<h2>Scan to join</h2><p>Customers add your shop to their wallet at the counter.</p><div class="qrbox">'+qrSvg(linkFor(d.qr),{margin:1})+'</div><b class="code">'+esc(d.qr)+'</b><div class="pillrow"><button class="pill dark" data-share="'+esc(d.qr)+'">'+icon('share')+'Share</button><button class="pill line" data-copy="'+esc(d.qr)+'">'+icon('copy')+'Copy link</button></div>')}
+ if(d.newrecovery!==undefined){delete $('modal').dataset.lock;newRecovery(d.newrecovery==='first')}if(d.copytext){await copy(d.copytext);}
  if(d.share)share(d.share);if(d.copy)copy(linkFor(d.copy));
  if(d.scanmember&&!scanQr('Point the camera at the customer’s card QR.',code=>openCustomer(d.scanmember,code)))openMemberEntry(d.scanmember);
  if(d.enter)openMemberEntry(d.enter);
  if(d.join&&!busy){busy=true;b.disabled=true;try{await perform('join',{code:d.join});$('modal').close();category='All cards';go('My wallet');notify('Saved successfully');tg?.HapticFeedback?.notificationOccurred('success')}catch(err){$('inside').querySelector('.err').textContent=err.message}finally{busy=false;b.disabled=false}}
  if(d.confirm&&!busy){busy=true;b.disabled=true;try{await perform(d.confirm,{shop:d.shop,member:d.member});$('modal').close();notify('Saved successfully');tg?.HapticFeedback?.notificationOccurred('success')}catch(err){$('inside').querySelector('.err').textContent=err.message}finally{busy=false;b.disabled=false}}});
 function openMemberEntry(shop){modal('<h2>Customer member code</h2><p>Ask the customer to open their card, then type the code under the QR.</p>'+'<form data-form="lookup" data-extra="'+esc(shop)+'">'+input('Customer member code','member',30)+'<span class="err" role="alert"></span><button class="btn">Continue</button></form>')}
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').close()});
+$('modal').addEventListener('click',e=>{if(e.target===$('modal')&&!$('modal').dataset.lock)$('modal').close()});$('modal').addEventListener('cancel',e=>{if($('modal').dataset.lock)e.preventDefault()});
 document.addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;const f=e.target,b=Object.fromEntries(new FormData(f));for(const k in b)b[k]=b[k].trim();b.shop=f.dataset.extra;if(b.code)b.code=parseCode(b.code)||b.code.toUpperCase();if(b.member)b.member=parseCode(b.member)||b.member.toUpperCase();f.querySelector('button').disabled=true;
  try{if(Object.entries(b).some(([k,v])=>k!=='shop'&&!v))throw Error('Please complete every field.');
+  if(f.dataset.form==='recover'){const {code}=await api('account/recover',{code:b.code});await refresh();category='All cards';go('My wallet');modal(recoveryView(code,false));return}
   if(f.dataset.form==='lookup'){busy=false;await openCustomer(b.shop,b.member);return}
   modalKey=f.dataset.key||(f.dataset.key=crypto.randomUUID());await perform(f.dataset.form,b);category='All cards';$('modal').close();if(f.dataset.form==='create'||f.dataset.form==='manual')render();else go('My wallet');notify('Saved successfully')}
  catch(err){f.querySelector('.err').textContent=err.message}finally{busy=false;f.querySelector('button').disabled=false}});
 // ---------- boot ----------
 render();
 if(live){tg.ready();tg.expand();try{tg.setHeaderColor('#f6f6f7');tg.setBackgroundColor('#f6f6f7')}catch{}tg.BackButton?.onClick(()=>go('My wallet'));
- refresh().then(()=>{const code=parseCode(tg.initDataUnsafe?.start_param||params.get('join'));if(code&&!state.cards.some(c=>c.code===code))openJoin(code)}).catch(e=>{$('page').textContent=e.message});
+ refresh().then(()=>{if(!state.account?.recovery)return openWelcome();const code=parseCode(tg.initDataUnsafe?.start_param||params.get('join'));if(code&&!state.cards.some(c=>c.code===code))openJoin(code)}).catch(e=>{$('page').textContent=e.message});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!busy)refresh().catch(e=>notify(e.message))});setInterval(()=>{if(!document.hidden&&!busy&&!$('modal').open)refresh().catch(()=>{})},30000)}
 else{const code=parseCode(params.get('join'));if(code)openJoin(code)}

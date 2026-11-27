@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
 import {qrMatrix} from './docs/wallet/qr.js';
-import {database,change,wallet,telegramUser,preview,lookup} from './server.mjs';
+import {database,change,wallet,telegramUser,preview,lookup,touch,account,issueRecovery,recover,adminStats} from './server.mjs';
 test('Owner issues a program, member joins, stamps and redemption are authorized and retry-safe',()=>{
  const db=database(':memory:');change(db,'owner','create',{requestId:'1',name:'Cafe',category:'Coffee',target:2,reward:'Latte'});
  const shop=wallet(db,'owner').shops[0].code;change(db,'member','join',{requestId:'join',code:shop});
@@ -33,4 +33,20 @@ test('QR encoder builds finder patterns and scales with payload size',()=>{
  assert.equal(small.length,21);assert.ok(link.length>small.length&&(link.length-17)%4===0);
  for(const m of [small,link])for(const [r,c] of [[0,0],[0,m.length-7],[m.length-7,0]])assert.deepEqual([m[r][c],m[r+3][c+3],m[r+1][c+1],m[r+6][c+6]],[1,1,0,1]);
  assert.throws(()=>qrMatrix('x'.repeat(300)));
+});
+test('Recovery code moves a wallet to a new Telegram account once, with attempt limits',()=>{
+ const db=database(':memory:');touch(db,'old');change(db,'owner','create',{requestId:'1',name:'Cafe',category:'Coffee',target:2,reward:'Latte'});
+ const shop=wallet(db,'owner').shops[0].code;change(db,'old','join',{requestId:'j',code:shop});
+ assert.equal(account(db,'old').recovery,false);const code=issueRecovery(db,'old');assert.match(code,/^([A-F0-9]{4}-){6}[A-F0-9]{4}$/);assert.equal(account(db,'old').recovery,true);
+ assert.throws(()=>recover(db,'fresh',code.slice(0,-1)+(code.endsWith('0')?'1':'0')),/not valid/);assert.throws(()=>recover(db,'old',code),/already/);
+ const next=recover(db,'fresh',code.toLowerCase().replaceAll('-',' '));assert.notEqual(next,code);
+ assert.equal(wallet(db,'fresh').cards.length,1);assert.equal(wallet(db,'old').cards.length,0);assert.throws(()=>recover(db,'third',code),/not valid/);
+ for(let i=0;i<8;i++)try{recover(db,'spam','0'.repeat(28))}catch{}assert.throws(()=>recover(db,'spam',next),/Too many/);db.close();
+});
+test('Admin stats count real users and exclude recovered duplicates',()=>{
+ const db=database(':memory:');['a','b','c'].forEach(u=>touch(db,u));change(db,'a','create',{requestId:'1',name:'Gym',category:'Fitness',target:2,reward:'Pass'});
+ const shop=wallet(db,'a').shops[0].code;change(db,'b','join',{requestId:'j',code:shop});const member=wallet(db,'b').cards[0].member;change(db,'a','stamp',{requestId:'s',shop,member});
+ recover(db,'d',issueRecovery(db,'c'));const stats=adminStats(db);
+ assert.equal(stats.users.total,3);assert.equal(stats.users.recovered,1);assert.equal(stats.users.new1,3);assert.equal(stats.shops.owners,1);assert.equal(stats.cards.stampEvents,1);
+ assert.equal(stats.signups.at(-1).n,3);assert.equal(stats.stamps.at(-1).n,1);assert.equal(stats.recent.length,3);assert.equal(stats.top[0].members,1);db.close();
 });
