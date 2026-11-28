@@ -1,0 +1,23 @@
+{
+ "name": "CardYeung — Loyalty wallet",
+ "short_name": "CardYeung",
+ "description": "Every loyalty card in one place. Collect stamps and rewards at your favourite shops.",
+ "id": "./wallet/",
+ "start_url": "./wallet/",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#f6f6f7",
+ "theme_color": "#f6f6f7",
+ "categories": ["lifestyle", "shopping"],
+ "icons": [
+  {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+  {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+  {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+  {"src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml"}
+ ],
+ "shortcuts": [
+  {"name": "My wallet", "url": "./wallet/", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]},
+  {"name": "Shop studio", "url": "./wallet/?view=studio", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]}
+ ]
+}

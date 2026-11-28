@@ -31,10 +31,12 @@ export async function openStore(target){
   `CREATE TABLE IF NOT EXISTS cards(member TEXT PRIMARY KEY,customer TEXT NOT NULL,code TEXT REFERENCES shops(code),name TEXT,category TEXT,number TEXT,stamps INTEGER NOT NULL DEFAULT 0,created ${big} NOT NULL DEFAULT 0,UNIQUE(customer,code))`,
   `CREATE TABLE IF NOT EXISTS events(id ${serial},customer TEXT NOT NULL,name TEXT NOT NULL,category TEXT NOT NULL,label TEXT NOT NULL,delta TEXT NOT NULL,at ${big} NOT NULL)`,
   'CREATE INDEX IF NOT EXISTS activity_feed ON events(customer,id)','CREATE INDEX IF NOT EXISTS cards_by_code ON cards(code)','CREATE INDEX IF NOT EXISTS shops_by_owner ON shops(owner)',
-  'CREATE TABLE IF NOT EXISTS languages(customer TEXT PRIMARY KEY,lang TEXT NOT NULL)',
+  'CREATE TABLE IF NOT EXISTS languages(customer TEXT PRIMARY KEY,lang TEXT NOT NULL,muted INTEGER NOT NULL DEFAULT 0)',
   'CREATE TABLE IF NOT EXISTS requests(customer TEXT,request TEXT,PRIMARY KEY(customer,request))',
   `CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,pub TEXT UNIQUE NOT NULL,created ${big} NOT NULL,seen ${big} NOT NULL,salt TEXT,hash TEXT,merged_into TEXT)`,
   `CREATE TABLE IF NOT EXISTS recover_attempts(who TEXT NOT NULL,at ${big} NOT NULL)`,'CREATE INDEX IF NOT EXISTS attempts_by_who ON recover_attempts(who)'
  ])await store.exec(sql);
+ // Columns added after the first release.
+ try{await store.exec('ALTER TABLE languages ADD COLUMN muted INTEGER NOT NULL DEFAULT 0')}catch{}
  return store;
 }

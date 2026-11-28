@@ -1,5 +1,5 @@
 import {qrSvg} from './qr.js';
-const P={cards:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10.5h18M7 15h4',gift:'M3 8.5h18v4H3zM5 12.5V20h14v-7.5M12 8.5V20M12 8.5C9 8.5 6.8 7 7.4 5.4S10.6 4.6 12 8.5c1.4-3.9 3.6-4.2 4.6-3.1s-1.6 3.1-4.6 3.1',chart:'M5 20v-8M12 20V4M19 20v-5',store:'M3 10l2-6h14l2 6a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0M5 13v8h14v-8M10 21v-5h4v5',plus:'M12 5v14M5 12h14',back:'M19 12H5M11 6l-6 6 6 6',arrow:'M7 17L17 7M8 7h9v9',scan:'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7.5 12h9',cup:'M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2.5 2.5 0 0 1 0 5h-2M8 3v3M12 3v3',gym:'M3 9v6M6 6v12M9 8v8M9 12h6M15 8v8M18 6v12M21 9v6',cinema:'M3 7h18v11H3v-3a3 3 0 0 0 0-5zM15 8v2m0 2v2m0 2v1',share:'M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',copy:'M9 9h11v11H9zM5 15V4h11',qr:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-4M14 18v2',clock:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 7v5l3 2',keys:'M4 7h16M4 12h16M4 17h9',check:'M5 12.5l4.5 4.5L19 7.5',stamp:'M5 16h14l2 4H3zM8 16v-3l2-3c-5-9 9-9 4 0l2 3v3'};
+const P={send:'M21 4 3 11l7 3 3 7 8-17ZM10 14l4-4',cards:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10.5h18M7 15h4',gift:'M3 8.5h18v4H3zM5 12.5V20h14v-7.5M12 8.5V20M12 8.5C9 8.5 6.8 7 7.4 5.4S10.6 4.6 12 8.5c1.4-3.9 3.6-4.2 4.6-3.1s-1.6 3.1-4.6 3.1',chart:'M5 20v-8M12 20V4M19 20v-5',store:'M3 10l2-6h14l2 6a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0M5 13v8h14v-8M10 21v-5h4v5',plus:'M12 5v14M5 12h14',back:'M19 12H5M11 6l-6 6 6 6',arrow:'M7 17L17 7M8 7h9v9',scan:'M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7.5 12h9',cup:'M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2.5 2.5 0 0 1 0 5h-2M8 3v3M12 3v3',gym:'M3 9v6M6 6v12M9 8v8M9 12h6M15 8v8M18 6v12M21 9v6',cinema:'M3 7h18v11H3v-3a3 3 0 0 0 0-5zM15 8v2m0 2v2m0 2v1',share:'M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',copy:'M9 9h11v11H9zM5 15V4h11',qr:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-4M14 18v2',clock:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 7v5l3 2',keys:'M4 7h16M4 12h16M4 17h9',check:'M5 12.5l4.5 4.5L19 7.5',stamp:'M5 16h14l2 4H3zM8 16v-3l2-3c-5-9 9-9 4 0l2 3v3'};
 const icon=k=>'<svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+P[k]+'"/></svg>';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const num=v=>language==='km'?khnum(v):String(v),loc=language==='km'?'km-KH':'en';
@@ -11,15 +11,27 @@ function seedEvents(){const out=[];let x=7;const rnd=()=>(x=x*16807%2147483647)/
  if(d%19===9){const p=demoPrograms[Math.floor(rnd()*4)];out.push({name:p.name,category:p.category,label:'Reward redeemed',delta:'Redeemed',at:now-d*864e5-72e5})}}
  return out.sort((a,b)=>b.at-a.at)}
 const seed=()=>({cards:structuredClone(demoPrograms),shops:[],events:seedEvents(),bot:null});
-const tg=window.Telegram?.WebApp,live=!!tg?.initData,storage='cardyeung-wallet-v2',params=new URLSearchParams(location.search);
-let state=live?{cards:[],events:[],shops:[],bot:null}:JSON.parse(localStorage.getItem(storage)||'null')||seed();
+const store={get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch{}}};
+const tg=window.Telegram?.WebApp,inTelegram=!!tg?.initData,session=inTelegram?null:store.get('cardyeung-session'),profile=JSON.parse(store.get('cardyeung-profile')||'{}');
+const live=inTelegram||!!session,storage='cardyeung-wallet-v2',params=new URLSearchParams(location.search);
+const authHeader=()=>inTelegram?'tma '+tg.initData:'Bearer '+session;let offline=false,installPrompt=null;
+let state=live?{cards:[],events:[],shops:[],bot:null}:JSON.parse(store.get(storage)||'null')||seed();
 let page=params.get('view')==='studio'?'Shop studio':'My wallet',category='All cards',tab='General',range='Monthly',monthBack=0,busy=false,loaded=!live,modalKey='';
-const holder=()=>tg?.initDataUnsafe?.user?.first_name||'Sokha';
-const save=()=>{if(!live)localStorage.setItem(storage,JSON.stringify(state))};
+const holder=()=>tg?.initDataUnsafe?.user?.first_name||profile.first_name||'Sokha',photoUrl=()=>tg?.initDataUnsafe?.user?.photo_url||profile.photo_url||'';
+const save=()=>{if(!live)store.set(storage,JSON.stringify(state))};
 const uid=()=>crypto.randomUUID().replaceAll('-','').slice(0,14).toUpperCase();
 function notify(msg){$('toast').textContent=msg;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').textContent='',3200)}
-async function api(path,data){const res=await fetch('/api/'+path,{method:data?'POST':'GET',headers:{'Content-Type':'application/json','Authorization':'tma '+tg.initData},body:data?JSON.stringify(data):undefined});if(!res.ok)throw Error((await res.json()).error||'Please try again.');return res.json()}
-async function refresh(){if(!live)return;state=await api('wallet');loaded=true;render()}
+async function api(path,data){const res=await fetch('/api/'+path,{method:data?'POST':'GET',headers:{'Content-Type':'application/json','Authorization':authHeader()},body:data?JSON.stringify(data):undefined});if(res.status===401&&session){signOut();return new Promise(()=>{})}if(!res.ok)throw Error((await res.json().catch(()=>({}))).error||'Please try again.');return res.json()}
+async function refresh(){if(!live)return;try{state=await api('wallet');offline=false;store.set('cardyeung-live-cache',JSON.stringify(state))}catch(e){const cached=JSON.parse(store.get('cardyeung-live-cache')||'null');if(!cached||navigator.onLine!==false&&!(e instanceof TypeError))throw e;state=cached;offline=true}loaded=true;render()}
+function signOut(){store.set('cardyeung-session',null);store.set('cardyeung-profile',null);store.set('cardyeung-live-cache',null);location.replace(location.pathname)}
+// Live updates: a streamed fetch keeps the credential in a header instead of the URL.
+async function connectLive(){let wait=2000;for(;;){try{const res=await fetch('/api/live',{headers:{Authorization:authHeader()},cache:'no-store'});if(!res.ok||!res.body)throw Error();wait=2000;const reader=res.body.pipeThrough(new TextDecoderStream()).getReader();let buf='';
+ for(;;){const {value,done}=await reader.read();if(done)break;buf+=value;let i;while((i=buf.indexOf('\n\n'))>=0){const chunk=buf.slice(0,i);buf=buf.slice(i+2);const line=chunk.split('\n').find(l=>l.startsWith('data: '));if(line)onLive(JSON.parse(line.slice(6)))}}}catch{}await new Promise(r=>setTimeout(r,wait));wait=Math.min(wait*2,30000)}}
+function onLive(e){refresh().catch(()=>{});
+ if(e.mine&&e.type==='stamp'){const full=e.stamps>=e.target;celebrate(full?'🎁':'⭐',full?'Reward ready':'+1 stamp',e.name);tg?.HapticFeedback?.notificationOccurred('success')}
+ else if(e.mine&&e.type==='redeem')celebrate('🎉','Reward redeemed',e.name);
+ else if(!e.mine&&e.type==='join')notify('New member joined');}
+function celebrate(emoji,title,name){const el=document.createElement('div');el.className='cheer';el.innerHTML='<i>'+emoji+'</i><span><b>'+esc(title)+'</b><small>'+esc(name)+'</small></span>';document.body.appendChild(el);setTimeout(()=>el.remove(),3800)}
 const fmt=(at,o)=>new Intl.DateTimeFormat(loc,o).format(new Date(at)),when=at=>fmt(at,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 const tail=c=>String(c.number||c.member).slice(-4).toUpperCase(),isReady=c=>!c.manual&&c.stamps>=c.target;
 // ---------- cards ----------
@@ -31,12 +43,12 @@ function miniBars(c){if(!c||c.manual)return '';const n=Math.min(c.target,12);con
 // ---------- screens ----------
 function nav(){const items=[['My wallet','cards'],['My rewards','gift'],['Activity','chart'],['Shop studio','store']];
  $('dock').innerHTML=items.map(([n,i])=>'<button class="'+(page===n?'on':'')+'" data-action="'+n+'" aria-label="'+n+'">'+icon(i)+'</button>').join('')}
-function bar(){const photo=tg?.initDataUnsafe?.user?.photo_url,avatar='<button class="av" data-action="account" aria-label="Account" '+(photo?'style="background-image:url('+esc(photo)+')"':'')+'>'+(photo?'':esc(holder()).charAt(0))+'</button>';
+function bar(){const photo=photoUrl(),avatar='<button class="av" data-action="account" aria-label="Account" '+(photo?'style="background-image:url('+esc(photo)+')"':'')+'>'+(photo?'':esc(holder()).charAt(0))+'</button>';
  $('barL').innerHTML=page==='My wallet'?avatar+'<button class="circle" data-action="add" aria-label="Add card">'+icon('plus')+'</button>':'<button class="circle" data-action="My wallet" aria-label="Back">'+icon('back')+'</button>';
  $('barR').innerHTML=page==='My wallet'?'<button class="circle" data-action="scan" aria-label="Scan QR">'+icon('scan')+'</button>':avatar+'<button class="circle" data-action="add" aria-label="Add card">'+icon('plus')+'</button>'}
 function home(){const real=state.cards.filter(c=>!c.manual),have=real.reduce((n,c)=>n+Math.min(c.stamps,c.target),0),need=real.reduce((n,c)=>n+c.target,0),ready=real.filter(isReady).length;
  const cats=[...new Set(state.cards.map(c=>c.category))],shown=state.cards.filter(c=>category==='All cards'||c.category===category);
- return '<section class="hero"><p class="hello">Welcome back, '+esc(holder())+'!</p><div class="hero-row"><h1>Your Loyalty Cards <i>('+num(state.cards.length)+')</i></h1><button class="tag peach" data-action="Activity">'+icon('chart')+'Statistics</button></div><div class="hero-row"><div class="total"><span><strong>'+num(have)+'</strong><i>/'+num(need)+'</i></span><small>Collected stamps</small></div><span class="tag lav">'+icon('gift')+'<b>'+num(ready)+'</b>Rewards ready</span></div></section>'+
+ return (live?offline?'<div class="banner">'+icon('clock')+'<span>Offline — showing your last saved cards.</span></div>':'':inTelegram?'':'<button class="banner" data-action="account">'+icon('send')+'<span>Sample wallet. Sign in with Telegram to keep your own cards.</span></button>')+'<section class="hero"><p class="hello">Welcome back, '+esc(holder())+'!</p><div class="hero-row"><h1>Your Loyalty Cards <i>('+num(state.cards.length)+')</i></h1><button class="tag peach" data-action="Activity">'+icon('chart')+'Statistics</button></div><div class="hero-row"><div class="total"><span><strong>'+num(have)+'</strong><i>/'+num(need)+'</i></span><small>Collected stamps</small></div><span class="tag lav">'+icon('gift')+'<b>'+num(ready)+'</b>Rewards ready</span></div></section>'+
  '<section class="sheet"><span class="handle"></span>'+(cats.length>1?'<div class="chips">'+['All cards',...cats].map(v=>'<button class="chip '+(category===v?'sel':'')+'" data-cat="'+esc(v)+'">'+esc(v)+'</button>').join('')+'</div>':'')+(shown.length?stack(shown):'<div class="starter"><p>Add your first card to get started.</p><button class="quick" data-action="scan"><i class="ico mint">'+icon('scan')+'</i><span><b>Scan a shop QR</b><small>At the counter or on a poster</small></span></button><button class="quick" data-action="add"><i class="ico lav">'+icon('keys')+'</i><span><b>Type a join code</b><small>The shop tells you the code</small></span></button><button class="quick" data-action="manual"><i class="ico peach">'+icon('cards')+'</i><span><b>Save a membership card</b><small>Keep an existing number here</small></span></button></div>')+(shown.length?'<button class="add" data-action="add">'+icon('plus')+'Add New Card</button>':'')+'</section>'}
 function series(){const now=new Date(),days=[];
  if(range==='Weekly'){for(let i=6;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);days.push({d,label:fmt(d,{weekday:'short'})})}}
@@ -103,8 +115,9 @@ const recoveryView=(code,first)=>'<h2>Your recovery code</h2><p>Keep it somewher
 const recoverForm=()=>'<h2>Recover my account</h2><p>Enter the recovery code from your old account. Its cards, rewards and shops move to this Telegram account.</p>'+form('recover',input('Recovery code','code',50),'Recover account');
 async function newRecovery(first){try{const {code}=await api('account/recovery',{});await refresh();modal(recoveryView(code,first))}catch(e){notify(e.message)}}
 function openWelcome(){modal('<h2>Welcome to CardYeung</h2><p>Your account is created from your Telegram profile, so there is nothing to type. Create a recovery code now so you can restore your cards if you ever lose access.</p><button class="btn" data-newrecovery="first">'+icon('check')+'Create my recovery code</button><hr><button class="textbtn" data-action="recoverform">I already have an account</button>');$('modal').dataset.lock='1'}
-function openAccount(){if(!live)return modal('<h2>Telegram account</h2><p>You are exploring a sample wallet on this device. Open the configured CardYeung bot and choose My wallet to use your Telegram account.</p>');
- modal('<h2>'+esc(holder())+'</h2><p>Account <b>'+esc(state.account?.id||'')+'</b></p><button class="btn" data-newrecovery="">'+icon('check')+(state.account?.recovery?'New recovery code':'Create recovery code')+'</button><hr><button class="textbtn" data-action="recoverform">Recover another account</button>')}
+const installRow=()=>installPrompt?'<button class="btn alt" data-install style="margin-top:10px">'+icon('plus')+'Install app</button>':/iphone|ipad/i.test(navigator.userAgent)&&!matchMedia('(display-mode: standalone)').matches&&!inTelegram?'<p class="hint">To install: tap Share, then Add to Home Screen.</p>':'';
+async function openAccount(){if(!live){modal('<h2>Telegram account</h2><p>You are exploring a sample wallet on this device.</p><div id="signin" class="signin"></div>'+installRow());mountSignIn();return}
+ modal('<h2>'+esc(holder())+'</h2><p>Account <b>'+esc(state.account?.id||'')+'</b></p><button class="btn" data-newrecovery="">'+icon('check')+(state.account?.recovery?'New recovery code':'Create recovery code')+'</button><hr><button class="textbtn" data-action="recoverform">Recover another account</button>'+installRow()+(session?'<button class="btn alt" style="margin-top:10px" data-signout>Sign out</button>':''))}
 async function share(code){const url=linkFor(code),shop=state.shops.find(s=>s.code===code);
  if(tg?.openTelegramLink)return tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(shop?.name||''));
  if(navigator.share)try{return await navigator.share({title:shop?.name,url})}catch{}
@@ -117,6 +130,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  if(d.counter){modal('<div class="counter"><div class="qrbig">'+qrSvg(d.counter,{margin:2})+'</div><b class="code">'+esc(d.counter)+'</b><p>Show this to the cashier</p></div><button class="btn" data-action="close">Done</button>');tg?.HapticFeedback?.impactOccurred('light')}
  if(d.qr){const s=state.shops.find(x=>x.code===d.qr);modal('<h2>Scan to join</h2><p>Customers add your shop to their wallet at the counter.</p><div class="qrbox">'+qrSvg(linkFor(d.qr),{margin:1})+'</div><b class="code">'+esc(d.qr)+'</b><div class="pillrow"><button class="pill dark" data-share="'+esc(d.qr)+'">'+icon('share')+'Share</button><button class="pill line" data-copy="'+esc(d.qr)+'">'+icon('copy')+'Copy link</button></div>')}
  if(d.newrecovery!==undefined){delete $('modal').dataset.lock;newRecovery(d.newrecovery==='first')}if(d.copytext){await copy(d.copytext);}
+ if(b.hasAttribute('data-signout'))signOut();if(b.hasAttribute('data-install')&&installPrompt){installPrompt.prompt();installPrompt=null;$('modal').close()}
  if(d.share)share(d.share);if(d.copy)copy(linkFor(d.copy));
  if(d.scanmember&&$('modal').open&&tg?.showScanQrPopup)$('modal').close();if(d.scanmember&&!scanQr('Point the camera at the customer’s card QR.',code=>openCustomer(d.scanmember,code)))openMemberEntry(d.scanmember);
  if(d.enter)openMemberEntry(d.enter);
@@ -132,7 +146,15 @@ document.addEventListener('submit',async e=>{e.preventDefault();if(busy)return;b
  catch(err){f.querySelector('.err').textContent=err.message}finally{busy=false;f.querySelector('button').disabled=false}});
 // ---------- boot ----------
 render();
-if(live){tg.ready();tg.expand();try{tg.setHeaderColor('#f6f6f7');tg.setBackgroundColor('#f6f6f7')}catch{}tg.BackButton?.onClick(()=>go('My wallet'));
- refresh().then(()=>{if(!state.account?.recovery)return openWelcome();const code=parseCode(tg.initDataUnsafe?.start_param||params.get('join'));if(code&&!state.cards.some(c=>c.code===code))openJoin(code)}).catch(e=>{$('page').textContent=e.message});
- document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!busy)refresh().catch(e=>notify(e.message))});setInterval(()=>{if(!document.hidden&&!busy&&!$('modal').open)refresh().catch(()=>{})},30000)}
+if(live){if(inTelegram){tg.ready();tg.expand();try{tg.setHeaderColor('#f6f6f7');tg.setBackgroundColor('#f6f6f7')}catch{}tg.BackButton?.onClick(()=>go('My wallet'))}connectLive();
+ refresh().then(()=>{if(!state.account?.recovery)return openWelcome();const code=parseCode(tg?.initDataUnsafe?.start_param||params.get('join'));if(code&&!state.cards.some(c=>c.code===code))openJoin(code)}).catch(e=>{$('page').textContent=e.message});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!busy)refresh().catch(e=>notify(e.message))});setInterval(()=>{if(!document.hidden&&!busy&&!$('modal').open)refresh().catch(()=>{})},60000)}
 else{const code=parseCode(params.get('join'));if(code)openJoin(code)}
+
+// Sign in outside Telegram with the Telegram Login Widget (needs the bot's domain set in BotFather).
+async function mountSignIn(){const box=$('signin');if(!box)return;let bot=null;try{const r=await fetch('/api/config');if(r.ok)bot=(await r.json()).bot}catch{}
+ if(!bot){box.innerHTML='<p class="hint">Open the CardYeung bot in Telegram and choose My wallet to use your own account.</p>';return}
+ window.cardyeungAuth=async user=>{try{const r=await fetch('/api/auth/widget',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(user)});const d=await r.json();if(!r.ok)throw Error(d.error);store.set('cardyeung-session',d.token);store.set('cardyeung-profile',JSON.stringify(d.user));location.reload()}catch(e){notify(e.message||'Please try again.')}};
+ const sc=document.createElement('script');sc.async=true;sc.src='https://telegram.org/js/telegram-widget.js?22';Object.assign(sc.dataset,{telegramLogin:bot,size:'large',radius:'20',onauth:'cardyeungAuth(user)',requestAccess:'write'});box.appendChild(sc)}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e});
+if('serviceWorker' in navigator&&!inTelegram&&location.protocol!=='file:')navigator.serviceWorker.register('../sw.js',{scope:'../'}).catch(()=>{});

@@ -6,6 +6,21 @@ CardYeung is a free-to-use loyalty wallet for Telegram. The public GitHub Pages 
 
 Use Node.js 22.5 or newer (the container uses 24). Run `npm install`, then `npm start` and open http://localhost:4173/. Run `npm test` to check the loyalty, authentication, recovery and admin flows. Storage is PostgreSQL when `DATABASE_URL` is set (production) and a local SQLite file otherwise (`DB_FILE`, default `wallet.sqlite`). The only runtime dependency is `pg`; set `TEST_DATABASE_URL` to run the tests against Postgres.
 
+## Deploy for free (Render + Neon)
+
+1. **Database:** create a free project at neon.com and copy its connection string (it ends with `?sslmode=require`).
+2. **App:** in Render choose *New → Blueprint*, pick this repository, and fill in the variables from `render.yaml` (`DATABASE_URL`, `BOT_TOKEN`, `BOT_USERNAME`, `WEBHOOK_SECRET`, `ADMIN_PASSWORD`; `APP_URL` is the `https://….onrender.com/` address Render gives you). It builds the `Dockerfile`; `/healthz` checks the database.
+3. **Telegram:** run `node server.mjs --configure-bot` once with `BOT_TOKEN`, `APP_URL` and `WEBHOOK_SECRET` set. In BotFather run `/setdomain` with the Render host so *Sign in with Telegram* works in the installed web app, and set the bot as the Main Mini App for `startapp` join links.
+4. **Landing page:** GitHub Pages can keep serving `docs/`; set `bot` in `docs/config.js` so its buttons open the bot.
+
+Render's free web service sleeps after about 15 idle minutes and takes up to a minute to wake, so the first bot reply after a quiet spell is slow. Move to a paid instance when a shop depends on it at the counter.
+
+## App, live updates and notifications
+
+- **Installable app (PWA):** `docs/manifest.webmanifest`, icons in `docs/icons` (`node tools/render-icons.cjs`) and `docs/sw.js`, which keeps the app shell offline and never caches API traffic. Outside Telegram people sign in with the Telegram Login Widget and get a 30-day signed session; signed-in wallets keep the last loaded cards for offline viewing.
+- **Live updates:** an open wallet holds a streamed `/api/live` connection, so a stamp, reward or new member appears in about a second with an on-screen celebration. The stream lives in the server process, so run one instance (or add Postgres LISTEN/NOTIFY before scaling out).
+- **Notifications:** the bot messages customers on every stamp, when a reward is ready and when it is redeemed, and messages owners when someone joins. Messages follow each person's language; `/mute` and `/unmute` turn them off and on. Telegram only delivers to people who have started the bot or allowed messages at sign-in.
+
 ## Deploy to InstaCloud
 
 InstaCloud provides the Postgres database and the container host. With the `insta` CLI signed in and linked to a project (`npx -y insta@latest agent setup --create`), run `deploy/instacloud.sh` from the repo root. It creates a Postgres service and an always-on compute service, binds `DATABASE_URL`, prompts for `BOT_TOKEN`, `WEBHOOK_SECRET`, `ADMIN_PASSWORD` and `BOT_USERNAME`, builds the `Dockerfile` remotely and deploys. Then set `APP_URL` to the printed URL, run `insta compute restart` and register the bot with `node server.mjs --configure-bot`. `/healthz` checks the database connection.
