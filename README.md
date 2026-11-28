@@ -39,6 +39,10 @@ Not built yet: staff accounts with their own permissions, push reminders to laps
 
 ## Card artwork
 
-The card faces in docs/wallet/assets are rendered procedurally, so they can be regenerated and tuned: `node tools/render-art.cjs` (uses the Chromium that ships with Playwright). Each uses a real material: pebbled forest-green leather with stitching and gold-foil beans for coffee, brushed cobalt aluminium with a knurled grip for fitness, burgundy velvet curtains with marquee bulbs for entertainment, and a pearl-mint ceramic with iridescent guilloche for other. The interface uses a stacked-card layout with notched corners, a mint statistics panel and a floating dock.
+The coffee, fitness and cinema cards use the original photographs in docs/wallet/assets (made with ImageGen: full-bleed, text-free shots with the subject on the right and dark space for lettering on the left). The 'Other' category uses a procedural face rendered by `node tools/render-art.cjs`.
+
+## Landing page
+
+docs/index.html is the public site: hero with a live, clickable wallet demo, customer steps, the photo card collection, the shop-owner pitch, features, a paper-vs-CardYeung comparison and an FAQ. Set your bot username in docs/config.js and every "Open wallet" button becomes "Open in Telegram" pointing at the bot.
 
 Khmer is the default language. The landing page and mini app share a remembered language preference. In the bot, use /english or /khmer to switch reply language.

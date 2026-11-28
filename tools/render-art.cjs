@@ -1,4 +1,5 @@
-// Renders the four photoreal-style card faces in docs/wallet/assets.
+// Renders the procedural card face for the 'Other' category (docs/wallet/assets/other.jpg).
+// Coffee, fitness and cinema use the original photographs; pass --all to also re-render procedural versions of those.
 // Pure SVG lighting + procedural texture, rasterised with the preinstalled Chromium. Run: node tools/render-art.cjs
 const {chromium}=require('playwright');const fs=require('fs');const path=require('path');
 const W=1000,H=631,out=path.join(__dirname,'../docs/wallet/assets');
@@ -80,5 +81,5 @@ function other(){
  ${finish('#3b6a5e')}</svg>`}
 
 (async()=>{const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:W,height:H}});
- for(const [name,fn] of Object.entries({coffee,gym,cinema,other})){await page.setContent(`<body style="margin:0">${fn()}</body>`);await page.screenshot({path:path.join(out,name+'.jpg'),type:'jpeg',quality:80});console.log(name,fs.statSync(path.join(out,name+'.jpg')).size)}
+ for(const [name,fn] of Object.entries(process.argv.includes('--all')?{coffee,gym,cinema,other}:{other})){await page.setContent(`<body style="margin:0">${fn()}</body>`);await page.screenshot({path:path.join(out,name+'.jpg'),type:'jpeg',quality:80});console.log(name,fs.statSync(path.join(out,name+'.jpg')).size)}
  await browser.close()})();
