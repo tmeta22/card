@@ -210,10 +210,15 @@ export function app(db){return createServer(async(req,res)=>{
  const data=await readFile(file);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webmanifest':'application/manifest+json','.json':'application/json'})[extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);
  }catch(e){json({error:e.status?e.message:e.code==='ENOENT'?'Not found.':'Unable to complete the request.'},e.status||(e.code==='ENOENT'?404:500))}
 })}
+const botReady=()=>process.env.BOT_TOKEN&&/^https:\/\//.test(process.env.APP_URL||'')&&/^[-\w]{16,256}$/.test(process.env.WEBHOOK_SECRET||'');
+async function configureBot(){
+ await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});console.log('Telegram webhook and wallet menu configured.');
+}
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(process.argv.includes('--configure-bot')){
- if(!process.env.BOT_TOKEN||!/^https:\/\//.test(process.env.APP_URL||'')||!/^[-\w]{16,256}$/.test(process.env.WEBHOOK_SECRET||''))throw Error('Set BOT_TOKEN, HTTPS APP_URL and WEBHOOK_SECRET (16–256 letters, digits, underscores or hyphens).');
- await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});console.log('Telegram webhook and wallet menu configured.');
- }else{const port=Number(process.env.PORT||4173);app(await database(process.env.DATABASE_URL||process.env.DB_FILE||'wallet.sqlite')).listen(port,()=>console.log('CardYeung listening on port '+port))}
+ if(!botReady())throw Error('Set BOT_TOKEN, HTTPS APP_URL and WEBHOOK_SECRET (16–256 letters, digits, underscores or hyphens).');
+ await configureBot();
+ }else{const port=Number(process.env.PORT||4173);app(await database(process.env.DATABASE_URL||process.env.DB_FILE||'wallet.sqlite')).listen(port,()=>{console.log('CardYeung listening on port '+port);
+  // Register the Telegram webhook on every start so deploys never leave the bot unconfigured. Failures are logged, never fatal.
+  if(botReady()&&process.env.NODE_ENV==='production')configureBot().catch(e=>console.error('Telegram webhook setup failed: '+e.message))})}
 }
-
