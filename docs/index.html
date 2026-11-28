@@ -1,7 +1,115 @@
-<!doctype html><html lang="km"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Keep loyalty cards in one Telegram wallet. Create a free stamp program for your shop."><meta name="theme-color" content="#f5f5ee"><title>CardYeung — Your everyday loyalty wallet</title><link rel="stylesheet" href="landing.css"><link rel="stylesheet" href="./language.css"><script src="./locale.js"></script></head><body>
-<header><a class="brand" href="./"><i></i>CardYeung<span>.</span></a><nav><a href="#wallet">The wallet</a><a href="#shops">For shops</a></nav><div class="headeractions"><button type="button" data-locale-toggle>English</button><a class="outline" href="wallet/">Open wallet</a></div></header>
-<main><section class="hero"><div class="intro"><div class="eyebrow"><span class="telegram">➤</span> TELEGRAM LOYALTY WALLET</div><h1>One wallet.<br><em>Every reward.</em></h1><p>From your morning coffee to movie night, keep every loyalty card together in Telegram.</p><div class="actions"><a class="primary" href="wallet/">Explore the wallet</a><a class="link" href="#shops">I'm a shop owner</a></div></div>
-<div class="showcase" aria-label="Example loyalty cards"><div class="orbit"></div><div class="pass fitness"><div class="cardtop"><span>FC</span>MEMBER PASS</div><strong>Forma Club</strong></div><div class="pass cinema"><div class="cardtop"><span>LC</span>CINEMA PASS</div><strong>Lumière Cinema</strong></div><div class="pass coffee"><div class="cardtop"><span>m.</span>LOYALTY PASS</div><strong>Moss Coffee</strong><div class="stamps">✿ ✿ ✿ ✿ ✿ ✿ ✿ <b>○ ○ ○</b></div><small>7 OF 10 STAMPS</small></div></div></section>
-<section class="collection" id="wallet"><div class="sectiontitle"><div class="eyebrow">THE COLLECTION</div><h2>A card for every routine.</h2></div><div class="gallery"><a href="wallet/" class="sample"><img src="wallet/assets/coffee.jpg" alt="Forest-green leather coffee card with gold-foil beans"><div><small>COFFEE</small><h3>Moss Coffee</h3></div></a><a href="wallet/" class="sample"><img src="wallet/assets/gym.jpg" alt="Cobalt knurled-metal fitness card"><div><small>FITNESS</small><h3>Forma Club</h3></div></a><a href="wallet/" class="sample"><img src="wallet/assets/cinema.jpg" alt="Burgundy velvet curtain cinema card"><div><small>ENTERTAINMENT</small><h3>Lumière Cinema</h3></div></a></div></section>
-<section class="shops" id="shops"><div><div class="eyebrow">FOR SHOP OWNERS</div><h2>Make the next visit<br>worth collecting.</h2><a class="primary" href="wallet/?view=studio">Explore Shop studio</a></div><ol><li><strong>Design your program</strong><p>Pick the stamp goal and the reward your customers can earn.</p></li><li><strong>Share one join code</strong><p>Customers add your shop to their wallet at the counter.</p></li><li><strong>Stamp each visit</strong><p>Scan a member card to award a stamp or redeem a full card.</p></li></ol></section></main><footer><a class="brand" href="./"><i></i>CardYeung<span>.</span></a><span>Free for shops and cardholders.</span></footer></body></html>
+<!doctype html><html lang="km"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CardYeung — Every loyalty card in Telegram</title>
+<meta name="description" content="Keep every loyalty card in one Telegram wallet. Shops create a free stamp program in seconds — no printed cards, no app to install.">
+<meta name="theme-color" content="#f3f3f1"><meta property="og:title" content="CardYeung — Every loyalty card in Telegram"><meta property="og:description" content="Free digital loyalty cards for coffee shops, gyms, cinemas and every shop in between."><meta property="og:image" content="wallet/assets/coffee.jpg">
+<link rel="stylesheet" href="landing.css"><link rel="stylesheet" href="./language.css"><script src="./config.js"></script><script src="./locale.js"></script></head>
+<body data-page="landing">
+<header class="nav"><a class="brand" href="./"><i aria-hidden="true"></i>CardYeung</a>
+ <nav><a href="#how">How it works</a><a href="#shops">For shops</a><a href="#faq">FAQ</a></nav>
+ <div class="navend"><button type="button" class="lang" data-locale-toggle>English</button><a class="btn dark sm" data-telegram href="wallet/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.1.4-1 1.9.1 2.2l4.6 1.4 1.8 5.6c.3.9 1.4 1.1 2 .4l2.6-2.7 4.6 3.4c.8.6 1.9.1 2.1-.9l3-14.9c.3-1.1-.9-2-2.2-1.7Z" fill="currentColor"/></svg><span>Open wallet</span></a></div></header>
+<main>
+<section class="hero">
+ <div class="copy">
+  <span class="eyebrow"><i></i>Free for shops and customers</span>
+  <h1><span>Every loyalty card.</span> <span class="mute">One Telegram tap.</span></h1>
+  <p class="lead">Collect stamps at your coffee shop, gym and cinema without carrying paper cards. Shops start a stamp program in seconds, for free.</p>
+  <div class="cta"><a class="btn dark" data-telegram href="wallet/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.1.4-1 1.9.1 2.2l4.6 1.4 1.8 5.6c.3.9 1.4 1.1 2 .4l2.6-2.7 4.6 3.4c.8.6 1.9.1 2.1-.9l3-14.9c.3-1.1-.9-2-2.2-1.7Z" fill="currentColor"/></svg><span>Open wallet</span></a><a class="btn ghost" href="#shops">I own a shop</a></div>
+  <ul class="ticks"><li>No app to install</li><li>No printed cards</li><li>Khmer and English</li></ul>
+ </div>
+ <div class="stage">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="phone"><iframe src="wallet/" title="Live CardYeung wallet demo" loading="lazy"></iframe><a class="tapcover" href="wallet/"><span>Tap to try the live demo</span></a></div>
+  <div class="float stamp" aria-hidden="true"><i class="dot mint"></i><span><b>+1 stamp</b><small>Moss Coffee</small></span></div>
+  <div class="float reward" aria-hidden="true"><i class="dot peach">🎁</i><span><b>Reward ready</b><small>Free movie ticket</small></span></div>
+  <p class="livetag"><i></i>Live demo — try it</p>
+ </div>
+</section>
 
+<section class="marquee" aria-label="Works for every kind of shop"><div class="track">
+ <span>☕ Coffee</span><span>🏋️ Gym</span><span>🎬 Cinema</span><span>🥐 Bakery</span><span>💇 Salon</span><span>📚 Bookstore</span><span>🧋 Bubble tea</span><span>🎤 Karaoke</span><span>🚗 Car wash</span><span>💆 Spa</span><span>🍜 Noodle shop</span><span>🧺 Laundry</span>
+ <span aria-hidden="true">☕ Coffee</span><span aria-hidden="true">🏋️ Gym</span><span aria-hidden="true">🎬 Cinema</span><span aria-hidden="true">🥐 Bakery</span><span aria-hidden="true">💇 Salon</span><span aria-hidden="true">📚 Bookstore</span><span aria-hidden="true">🧋 Bubble tea</span><span aria-hidden="true">🎤 Karaoke</span><span aria-hidden="true">🚗 Car wash</span><span aria-hidden="true">💆 Spa</span><span aria-hidden="true">🍜 Noodle shop</span><span aria-hidden="true">🧺 Laundry</span>
+</div></section>
+
+<section class="section" id="how">
+ <div class="head"><span class="eyebrow plain">For customers</span><h2><span>From counter to reward</span> <span class="mute">in three taps.</span></h2></div>
+ <div class="steps">
+  <article class="step mint"><span class="num">1</span><h3>Scan the shop’s QR</h3><p>The card lands in your Telegram wallet instantly. Nothing to download, nothing to sign up for.</p><div class="vis"><div class="qrmini"><i></i><i></i><i></i><b></b></div></div></article>
+  <article class="step lav"><span class="num">2</span><h3>Show your card when you pay</h3><p>The cashier scans the QR on your card and the stamp appears straight away.</p><div class="vis"><div class="ministack"><div class="mc coffee"></div><div class="mc gym"></div><div class="mc cinema"></div></div></div></article>
+  <article class="step peach"><span class="num">3</span><h3>Enjoy the reward</h3><p>When the card is full it moves to Rewards. Show it at the counter to claim.</p><div class="vis"><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="gift">🎁</i></div></div></article>
+ </div>
+</section>
+
+<section class="section gallery">
+ <div class="head"><span class="eyebrow plain">The collection</span><h2><span>Cards that feel</span> <span class="mute">like the real thing.</span></h2></div>
+ <div class="fan">
+  <a class="pcard coffee" href="wallet/"><span class="pt"><b>Moss Coffee</b><em>•••• 0001</em></span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="pb"><small>Coffee</small><span class="ppill">7 / 10</span></span></a>
+  <a class="pcard gym" href="wallet/"><span class="pt"><b>Forma Club</b><em>•••• 0002</em></span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="pb"><small>Fitness</small><span class="ppill">4 / 8</span></span></a>
+  <a class="pcard cinema" href="wallet/"><span class="pt"><b>Lumière Cinema</b><em>•••• 0003</em></span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="pb"><small>Entertainment</small><span class="ppill gold">Reward ready</span></span></a>
+ </div>
+</section>
+
+<section class="owners" id="shops">
+ <div class="owncopy">
+  <span class="eyebrow dark">For shop owners</span>
+  <h2><span>A loyalty program</span> <span class="mute">without the printing bill.</span></h2>
+  <p>Paper stamp cards cost money, get lost and tell you nothing. CardYeung is free, runs inside Telegram your customers already use, and needs no extra hardware: your phone is the scanner.</p>
+  <ul class="olist">
+   <li><b>Set up in 30 seconds</b><span>Name, reward and how many stamps. Done.</span></li>
+   <li><b>One QR for the counter</b><span>Print it or share the link in your Telegram channel.</span></li>
+   <li><b>Scan, stamp, next</b><span>Scan the customer’s card and tap once. Double taps never double-stamp.</span></li>
+   <li><b>See who comes back</b><span>Members, stamps given and rewards waiting, live.</span></li>
+  </ul>
+  <a class="btn light" href="wallet/?view=studio">Open Shop studio</a>
+ </div>
+ <div class="studio" aria-hidden="true">
+  <div class="prog"><div class="ptop"><i class="pico">☕</i><div><h3>Moss Coffee</h3><p>10 stamps earn Free handcrafted drink.</p></div><span class="qrbtn"><i></i><i></i><i></i><i></i></span></div>
+   <div class="pstats"><div><b>128</b><small>Members</small></div><div><b>642</b><small>Stamps</small></div><div><b>9</b><small>Ready</small></div></div>
+   <div class="pact"><span class="pb1">Scan customer</span><span class="pb2">Enter code</span></div></div>
+  <div class="toastmock"><i>✓</i><span><b>Stamp added</b><small>Scan next customer</small></span></div>
+ </div>
+</section>
+
+<section class="section">
+ <div class="head"><span class="eyebrow plain">Why CardYeung</span><h2><span>Built for the counter,</span> <span class="mute">not the boardroom.</span></h2></div>
+ <div class="bento">
+  <article class="b big mint"><h3>Sign in with Telegram</h3><p>No passwords and no forms. Your Telegram account is your login, and a one-time recovery code brings your cards back if you ever lose access.</p><div class="codeline">7F3A-91C2-…</div></article>
+  <article class="b lav"><h3>Two-second stamps</h3><p>Telegram’s built-in scanner reads the customer’s card. One tap and it’s saved.</p></article>
+  <article class="b peach"><h3>Never double-stamped</h3><p>Every action is retry-safe, so a shaky connection can’t give away free coffee.</p></article>
+  <article class="b"><h3>Khmer and English</h3><p>Every screen and the bot speak both. Customers choose.</p></article>
+  <article class="b"><h3>Share anywhere</h3><p>Join links work in chats, channels, posters and table stickers.</p></article>
+  <article class="b dark"><h3>Free</h3><p>No subscription and no fee per stamp, for shops or customers.</p></article>
+ </div>
+</section>
+
+<section class="section">
+ <div class="head"><h2><span>Paper card</span> <span class="mute">vs CardYeung</span></h2></div>
+ <div class="compare" role="table">
+  <div class="row th" role="row"><span role="columnheader"></span><span role="columnheader">Paper card</span><span role="columnheader">CardYeung</span></div>
+  <div class="row" role="row"><span role="rowheader">Cost per card</span><span role="cell" class="no">Printing every batch</span><span role="cell" class="yes">Free</span></div>
+  <div class="row" role="row"><span role="rowheader">Lost or forgotten</span><span role="cell" class="no">Stamps gone</span><span role="cell" class="yes">Always in Telegram</span></div>
+  <div class="row" role="row"><span role="rowheader">Fake stamps</span><span role="cell" class="no">Easy to copy</span><span role="cell" class="yes">Only the owner can stamp</span></div>
+  <div class="row" role="row"><span role="rowheader">Know your regulars</span><span role="cell" class="no">No idea</span><span role="cell" class="yes">Live member stats</span></div>
+  <div class="row" role="row"><span role="rowheader">Wallet space</span><span role="cell" class="no">One card per shop</span><span role="cell" class="yes">Every shop in one place</span></div>
+ </div>
+</section>
+
+<section class="section faq" id="faq">
+ <div class="head"><h2><span>Questions,</span> <span class="mute">answered.</span></h2></div>
+ <details><summary>Do customers need to install an app?</summary><p>No. CardYeung runs inside Telegram as a mini app. Customers open the bot or scan your QR and their card is ready.</p></details>
+ <details><summary>What does it cost?</summary><p>Nothing for shops or customers. There are no subscriptions and no per-stamp fees.</p></details>
+ <details><summary>How do I stamp a customer’s card?</summary><p>Open Shop studio, tap Scan customer and point your phone at the QR on their card. You can also type the code under the QR.</p></details>
+ <details><summary>What if a customer loses their Telegram account?</summary><p>When they first open the wallet they get a recovery code. Entering it from a new Telegram account moves all their cards and rewards across.</p></details>
+ <details><summary>Can I keep my existing membership cards?</summary><p>Yes. Save any membership number in your wallet so it is with you at checkout.</p></details>
+ <details><summary>Can someone fake stamps?</summary><p>No. Only the owner of a program can award stamps or redeem rewards, and every action is checked against the owner’s Telegram account.</p></details>
+</section>
+
+<section class="final">
+ <h2><span>Ditch the paper.</span> <span class="mute">Keep the regulars.</span></h2>
+ <div class="cta center"><a class="btn light" data-telegram href="wallet/"><span>Open wallet</span></a><a class="btn outline" href="wallet/?view=studio">Create a program</a></div>
+</section>
+</main>
+<footer><a class="brand" href="./"><i aria-hidden="true"></i>CardYeung</a><span>Free for shops and cardholders.</span><a href="admin/" class="muted">Admin</a></footer>
+<script>
+(function(){var bot=(window.CARDYEUNG||{}).bot;if(!bot)return;document.querySelectorAll('[data-telegram]').forEach(function(a){a.href='https://t.me/'+bot;var s=a.querySelector('span');if(s)s.textContent='Open in Telegram'})})();
+</script>
+</body></html>
