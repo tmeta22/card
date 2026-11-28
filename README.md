@@ -61,3 +61,7 @@ The coffee, fitness and cinema cards use the original photographs in docs/wallet
 docs/index.html is the public site: hero with a live, clickable wallet demo, customer steps, the photo card collection, the shop-owner pitch, features, a paper-vs-CardYeung comparison and an FAQ. Set your bot username in docs/config.js and every "Open wallet" button becomes "Open in Telegram" pointing at the bot.
 
 Khmer is the default language. The landing page and mini app share a remembered language preference. In the bot, use /english or /khmer to switch reply language.
+
+## Admin back office
+
+Open `/admin/` with `ADMIN_PASSWORD`, or send `/admin` to the bot from a Telegram account listed in `ADMIN_IDS` (comma-separated user IDs) and it signs you in automatically. Tabs: **Overview** (usage charts), **Users** (search by Telegram ID, suspend or reinstate, delete, clear recovery code, message, edit or delete their cards, set stamps), **Shops** (edit or delete programs), **Broadcast** (message everyone or only shop owners, skipping muted and suspended users) and an **Audit log** of every admin action. Admins cannot be suspended or deleted.

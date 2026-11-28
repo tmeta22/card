@@ -18,5 +18,7 @@ services:
         sync: false
       - key: APP_URL           # https://<service>.onrender.com/
         sync: false
+      - key: ADMIN_IDS         # your Telegram user ID(s), comma separated: full admin from inside the bot
+        sync: false
       - key: SESSION_SECRET
         generateValue: true
