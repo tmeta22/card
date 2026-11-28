@@ -212,7 +212,7 @@ export function app(db){return createServer(async(req,res)=>{
 })}
 const botReady=()=>process.env.BOT_TOKEN&&/^https:\/\//.test(process.env.APP_URL||'')&&/^[-\w]{16,256}$/.test(process.env.WEBHOOK_SECRET||'');
 async function configureBot(){
- await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});console.log('Telegram webhook and wallet menu configured.');
+ await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});await telegram('setMyCommands',{commands:[{command:'start',description:'Open my card wallet'},{command:'khmer',description:'ប្តូរទៅភាសាខ្មែរ'},{command:'english',description:'Switch to English'},{command:'mute',description:'Turn notifications off'},{command:'unmute',description:'Turn notifications on'}]});console.log('Telegram webhook, commands and wallet menu configured.');
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(process.argv.includes('--configure-bot')){
