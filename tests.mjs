@@ -4,6 +4,7 @@ import {createHmac} from 'node:crypto';
 import {qrMatrix} from './docs/wallet/qr.js';
 import {database,change,wallet,telegramUser,preview,lookup,touch,account,issueRecovery,recover,adminStats,notice,issueSession,sessionUser,widgetUser} from './server.mjs';
 import {createHash} from 'node:crypto';
+import {adminAction,searchUsers,userDetail,searchShops,auditLog,isAdmin,isBanned} from './admin.mjs';
 const target=process.env.TEST_DATABASE_URL||':memory:';
 async function fresh(){const db=await database(target);if(target!==':memory:')for(const t of ['recover_attempts','requests','languages','events','cards','shops','users'])await db.exec('DELETE FROM '+t);return db}
 test('Owner issues a program, member joins, stamps and redemption are authorized and retry-safe',async()=>{
@@ -68,4 +69,22 @@ test('Browser sessions and Telegram Login Widget data are signed and checked',()
  const bot='123:abc',data={id:42,first_name:'Dara',auth_date:Math.floor(Date.now()/1000)};
  const check=Object.entries(data).map(([k,v])=>k+'='+v).sort().join('\n'),hash=createHmac('sha256',createHash('sha256').update(bot).digest()).update(check).digest('hex');
  assert.equal(widgetUser({...data,hash},bot),'42');assert.throws(()=>widgetUser({...data,first_name:'Eve',hash},bot));assert.throws(()=>widgetUser({...data,hash},'other'));
+});
+
+test('Admins can search, suspend, edit and delete, and every action is logged',async()=>{
+ process.env.ADMIN_IDS='900, 901';assert.ok(isAdmin('900')&&isAdmin(901)&&!isAdmin('5'));
+ const db=await fresh();for(const u of ['900','10','11'])await touch(db,u);
+ await change(db,'10','create',{requestId:'1',name:'Cafe',category:'Coffee',target:3,reward:'Latte'});const shop=(await wallet(db,'10')).shops[0].code;
+ await change(db,'11','join',{requestId:'j',code:shop});const member=(await wallet(db,'11')).cards[0].member;
+ assert.equal((await searchUsers(db,'11')).length,1);assert.equal((await searchShops(db,'caf'))[0].members,1);assert.equal((await userDetail(db,'11')).cards[0].name,'Cafe');
+ await adminAction(db,{op:'setStamps',member,stamps:2});assert.equal((await wallet(db,'11')).cards[0].stamps,2);
+ await assert.rejects(adminAction(db,{op:'setStamps',member,stamps:9}),/0 to 3/);
+ await adminAction(db,{op:'editShop',code:shop,target:2,name:'Cafe 2'});const card=(await wallet(db,'11')).cards[0];assert.deepEqual([card.stamps,card.target,card.name],[2,2,'Cafe 2']);
+ await adminAction(db,{op:'ban',id:'11'});assert.equal(await isBanned(db,'11'),true);await adminAction(db,{op:'unban',id:'11'});assert.equal(await isBanned(db,'11'),false);
+ await assert.rejects(adminAction(db,{op:'ban',id:'900'}),/Admins/);await assert.rejects(adminAction(db,{op:'deleteUser',id:'900'}),/Admins/);
+ await assert.rejects(adminAction(db,{op:'message',id:'11',text:'hi'}),/not configured/);
+ const sent=[];await adminAction(db,{op:'message',id:'11',text:'hello'},{send:async(m,d)=>sent.push(d)});assert.deepEqual(sent,[{chat_id:'11',text:'hello'}]);
+ await db.run('INSERT INTO languages(customer,lang,muted) VALUES(?,?,1)','10','km');const out=await adminAction(db,{op:'broadcast',text:'news'},{send:async()=>{}});assert.equal(out.queued,2);
+ await adminAction(db,{op:'deleteUser',id:'10'});assert.equal((await searchShops(db,'')).length,0);assert.equal((await wallet(db,'11')).cards.length,0);await assert.rejects(userDetail(db,'10'),/not found/);
+ await assert.rejects(adminAction(db,{op:'nope'}),/Unknown/);assert.ok((await auditLog(db)).some(r=>r.action==='deleteUser'&&r.target==='10'));await db.close();delete process.env.ADMIN_IDS;
 });

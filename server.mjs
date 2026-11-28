@@ -1,6 +1,7 @@
 import {createServer} from 'node:http';
 import {createHmac,createHash,timingSafeEqual,randomBytes,scryptSync} from 'node:crypto';
 import {openStore} from './store.mjs';
+import {isAdmin,isBanned,adminAction,searchUsers,userDetail,searchShops,auditLog,adminIds} from './admin.mjs';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve,extname,sep} from 'node:path';
@@ -106,14 +107,19 @@ export async function adminStats(db){
   recent:recent.map(r=>({id:r.pub,tg:'••••'+r.id.slice(-3),created:r.created,seen:r.seen,cards:r.cards,shops:r.shops})),top};
 }
 const attempts=new Map();
-function adminKey(){return createHash('sha256').update('admin:'+(process.env.ADMIN_SECRET||process.env.ADMIN_PASSWORD||'')).digest()}
-function adminCookie(req){const m=(req.headers.cookie||'').match(/(?:^|; )cy_admin=([\w.-]+)/);if(!m)return false;const [exp,sig]=m[1].split('.');if(!(Number(exp)>Date.now()))return false;const want=createHmac('sha256',adminKey()).update(exp).digest('base64url');return want.length===sig?.length&&timingSafeEqual(Buffer.from(want),Buffer.from(sig))}
+const adminSecret=()=>process.env.ADMIN_SECRET||process.env.ADMIN_PASSWORD||process.env.SESSION_SECRET||process.env.BOT_TOKEN||'';
+function adminKey(){return createHash('sha256').update('admin:'+adminSecret()).digest()}
+function adminCookie(req){if(!adminSecret())return false;const m=(req.headers.cookie||'').match(/(?:^|; )cy_admin=([\w.-]+)/);if(!m)return false;const [exp,sig]=m[1].split('.');if(!(Number(exp)>Date.now()))return false;const want=createHmac('sha256',adminKey()).update(exp).digest('base64url');return want.length===sig?.length&&timingSafeEqual(Buffer.from(want),Buffer.from(sig))}
 function adminLogin(req,password){
  if(!process.env.ADMIN_PASSWORD||process.env.ADMIN_PASSWORD.length<12)reject('Admin portal is not configured.',503);
  const ip=String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim(),hit=(attempts.get(ip)||[]).filter(t=>t>Date.now()-9e5);
  if(hit.length>=8)reject('Too many attempts. Try again later.',429);attempts.set(ip,[...hit,Date.now()]);
  const a=createHash('sha256').update(String(password)).digest(),b=createHash('sha256').update(process.env.ADMIN_PASSWORD).digest();
  if(!timingSafeEqual(a,b))reject('Wrong password.',401);attempts.delete(ip);
+ return adminSession();
+}
+function adminSession(){
+ if(!adminSecret())reject('Admin portal is not configured.',503);
  const exp=String(Date.now()+12*3600000);return 'cy_admin='+exp+'.'+createHmac('sha256',adminKey()).update(exp).digest('base64url')+'; HttpOnly; SameSite=Strict; Path=/admin; Max-Age=43200'+(process.env.APP_URL?.startsWith('https')?'; Secure':'');
 }
 async function body(req){let text='';for await(const part of req){text+=part;if(text.length>32768)reject('Request too large.',413)}try{return JSON.parse(text)}catch{reject('Invalid JSON.')}}
@@ -179,7 +185,8 @@ export function app(db){return createServer(async(req,res)=>{
  if(path==='/telegram'&&req.method==='POST'){
  if(!process.env.WEBHOOK_SECRET||req.headers['x-telegram-bot-api-secret-token']!==process.env.WEBHOOK_SECRET)reject('Unauthorized.',403);
  const msg=(await body(req)).message;if(msg?.chat.type==='private'&&msg.from.id===msg.chat.id){
- const user=String(msg.from.id);await touch(db,user);const command=(msg.text||'').split(' ')[0].toLowerCase();
+ const user=String(msg.from.id);await touch(db,user);if(await isBanned(db,user))return json({ok:true});const command=(msg.text||'').split(' ')[0].toLowerCase();
+ if(command==='/admin'&&isAdmin(user)&&process.env.APP_URL){await telegram('sendMessage',{chat_id:msg.chat.id,text:'CardYeung admin',reply_markup:{inline_keyboard:[[{text:'Open admin',web_app:{url:new URL('admin/',process.env.APP_URL).href}}]]}});return json({ok:true})}
  if(command==='/mute'||command==='/unmute')await db.run('INSERT INTO languages(customer,lang,muted) VALUES(?,?,?) ON CONFLICT(customer) DO UPDATE SET muted=excluded.muted',user,'km',command==='/mute'?1:0);
  if(command==='/english'||command==='/khmer')await db.run('INSERT INTO languages(customer,lang) VALUES(?,?) ON CONFLICT(customer) DO UPDATE SET lang=excluded.lang',user,command==='/english'?'en':'km');
  const joinCode=command==='/start'&&/^[A-F0-9]{14}$/i.test((msg.text||'').split(' ')[1]||'')?(msg.text.split(' ')[1]).toUpperCase():'';
@@ -192,11 +199,20 @@ export function app(db){return createServer(async(req,res)=>{
  }
  if(path==='/admin'){res.writeHead(301,{Location:'/admin/'});return res.end()}
  if(path==='/admin/api/login'&&req.method==='POST'){const cookie=adminLogin(req,(await body(req)).password);res.writeHead(200,{'Content-Type':'application/json','Set-Cookie':cookie,'Cache-Control':'no-store'});return res.end('{"ok":true}')}
- if(path==='/admin/api/stats'){if(!adminCookie(req))reject('Sign in required.',401);return json(await adminStats(db))}
+ if(path==='/admin/api/telegram'&&req.method==='POST'){const id=authenticate(req);if(!isAdmin(id))reject('This Telegram account is not an admin.',403);res.writeHead(200,{'Content-Type':'application/json','Set-Cookie':adminSession(),'Cache-Control':'no-store'});return res.end('{"ok":true}')}
+ if(path.startsWith('/admin/api/')){
+ if(!adminCookie(req))reject('Sign in required.',401);const q=new URL(req.url,'http://localhost').searchParams;
+ if(path==='/admin/api/stats')return json(await adminStats(db));
+ if(path==='/admin/api/users')return json(await searchUsers(db,q.get('q')||''));
+ if(path==='/admin/api/user')return json(await userDetail(db,q.get('id')));
+ if(path==='/admin/api/shops')return json(await searchShops(db,q.get('q')||''));
+ if(path==='/admin/api/log')return json(await auditLog(db));
+ if(path==='/admin/api/do'&&req.method==='POST')return json(await adminAction(db,await body(req),{send:process.env.BOT_TOKEN?telegram:null}));
+ reject('Not found.',404)}
  if(path==='/api/auth/widget'&&req.method==='POST'){const data=await body(req),user=widgetUser(data,process.env.BOT_TOKEN);await touch(db,user);return json({token:issueSession(user),user:{first_name:String(data.first_name||'').slice(0,64),photo_url:/^https:\/\//.test(data.photo_url||'')?String(data.photo_url):''}})}
  if(path==='/api/config'&&req.method==='GET')return json({bot:/^\w{4,64}$/.test(process.env.BOT_USERNAME||'')?process.env.BOT_USERNAME:null});
  if(path.startsWith('/api/')){
- const query=new URL(req.url,'http://localhost').searchParams;const user=authenticate(req);await touch(db,user);
+ const query=new URL(req.url,'http://localhost').searchParams;const user=authenticate(req);await touch(db,user);if(await isBanned(db,user))reject('This account has been suspended.',403);
  if(path==='/api/live'&&req.method==='GET')return subscribe(user,req,res);
  if(path==='/api/wallet'&&req.method==='GET')return json({...await wallet(db,user),account:await account(db,user),bot:/^\w{4,64}$/.test(process.env.BOT_USERNAME||'')?process.env.BOT_USERNAME:null});
  if(path==='/api/preview'&&req.method==='GET')return json(await preview(db,query.get('code')));
@@ -212,7 +228,7 @@ export function app(db){return createServer(async(req,res)=>{
 })}
 const botReady=()=>process.env.BOT_TOKEN&&/^https:\/\//.test(process.env.APP_URL||'')&&/^[-\w]{16,256}$/.test(process.env.WEBHOOK_SECRET||'');
 async function configureBot(){
- await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});await telegram('setMyCommands',{commands:[{command:'start',description:'Open my card wallet'},{command:'khmer',description:'ប្តូរទៅភាសាខ្មែរ'},{command:'english',description:'Switch to English'},{command:'mute',description:'Turn notifications off'},{command:'unmute',description:'Turn notifications on'}]});console.log('Telegram webhook, commands and wallet menu configured.');
+ await telegram('setWebhook',{url:new URL('telegram',process.env.APP_URL).href,secret_token:process.env.WEBHOOK_SECRET});await telegram('setChatMenuButton',{menu_button:{type:'web_app',text:'កាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}});await telegram('setMyCommands',{commands:[{command:'start',description:'Open my card wallet'},{command:'khmer',description:'ប្តូរទៅភាសាខ្មែរ'},{command:'english',description:'Switch to English'},{command:'mute',description:'Turn notifications off'},{command:'unmute',description:'Turn notifications on'}]});for(const id of adminIds())await telegram('setMyCommands',{scope:{type:'chat',chat_id:Number(id)},commands:[{command:'admin',description:'Open the admin panel'},{command:'start',description:'Open my card wallet'},{command:'khmer',description:'ប្តូរទៅភាសាខ្មែរ'},{command:'english',description:'Switch to English'},{command:'mute',description:'Turn notifications off'},{command:'unmute',description:'Turn notifications on'}]}).catch(e=>console.error('Admin commands for '+id+' failed: '+e.message));console.log('Telegram webhook, commands and wallet menu configured.');
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(process.argv.includes('--configure-bot')){
