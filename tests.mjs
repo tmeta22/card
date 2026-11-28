@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
 import {qrMatrix} from './docs/wallet/qr.js';
-import {database,change,wallet,telegramUser,preview,lookup,touch,account,issueRecovery,recover,adminStats} from './server.mjs';
+import {database,change,wallet,telegramUser,preview,lookup,touch,account,issueRecovery,recover,adminStats,notice,issueSession,sessionUser,widgetUser} from './server.mjs';
+import {createHash} from 'node:crypto';
 const target=process.env.TEST_DATABASE_URL||':memory:';
 async function fresh(){const db=await database(target);if(target!==':memory:')for(const t of ['recover_attempts','requests','languages','events','cards','shops','users'])await db.exec('DELETE FROM '+t);return db}
 test('Owner issues a program, member joins, stamps and redemption are authorized and retry-safe',async()=>{
@@ -51,4 +52,20 @@ test('Admin stats count real users and exclude recovered duplicates',async()=>{
  await recover(db,'d',await issueRecovery(db,'c'));const stats=await adminStats(db);
  assert.equal(stats.users.total,3);assert.equal(stats.users.recovered,1);assert.equal(stats.users.new1,3);assert.equal(stats.shops.owners,1);assert.equal(stats.cards.stampEvents,1);
  assert.equal(stats.signups.at(-1).n,3);assert.equal(stats.stamps.at(-1).n,1);assert.equal(stats.recent.length,3);assert.equal(stats.top[0].members,1);await db.close();
+});
+test('Stamps report who to notify, and notices read naturally in both languages',async()=>{
+ const db=await fresh();assert.equal((await change(db,'o','create',{requestId:'1',name:'Cafe',category:'Coffee',target:2,reward:'Latte'})).kind,'create');
+ const shop=(await wallet(db,'o')).shops[0].code,joined=await change(db,'c','join',{requestId:'j',code:shop});assert.deepEqual([joined.owner,joined.members],['o',1]);
+ const member=(await wallet(db,'c')).cards[0].member,first=await change(db,'o','stamp',{requestId:'s1',shop,member});
+ assert.deepEqual([first.customer,first.stamps,first.target],['c',1,2]);assert.equal(await change(db,'o','stamp',{requestId:'s1',shop,member}),null);
+ assert.match(notice(first,'en'),/\+1 stamp at Cafe — 1\/2/);assert.match(notice(first,'km'),/១\/២/);
+ const full=await change(db,'o','stamp',{requestId:'s2',shop,member});assert.match(notice(full,'en'),/reward at Cafe is ready: Latte/);
+ assert.match(notice(await change(db,'o','redeem',{requestId:'r',shop,member}),'en'),/Reward redeemed/);assert.match(notice(joined,'en'),/New member joined Cafe/);await db.close();
+});
+test('Browser sessions and Telegram Login Widget data are signed and checked',()=>{
+ process.env.SESSION_SECRET='test-secret';const t=issueSession('42');assert.equal(sessionUser(t),'42');
+ assert.throws(()=>sessionUser(t.slice(0,-2)+'xx'));assert.throws(()=>sessionUser(issueSession('42',-1)));
+ const bot='123:abc',data={id:42,first_name:'Dara',auth_date:Math.floor(Date.now()/1000)};
+ const check=Object.entries(data).map(([k,v])=>k+'='+v).sort().join('\n'),hash=createHmac('sha256',createHash('sha256').update(bot).digest()).update(check).digest('hex');
+ assert.equal(widgetUser({...data,hash},bot),'42');assert.throws(()=>widgetUser({...data,first_name:'Eve',hash},bot));assert.throws(()=>widgetUser({...data,hash},'other'));
 });

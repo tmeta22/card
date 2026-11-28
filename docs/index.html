@@ -2,11 +2,11 @@
 <title>CardYeung — Every loyalty card in Telegram</title>
 <meta name="description" content="Keep every loyalty card in one Telegram wallet. Shops create a free stamp program in seconds — no printed cards, no app to install.">
 <meta name="theme-color" content="#f3f3f1"><meta property="og:title" content="CardYeung — Every loyalty card in Telegram"><meta property="og:description" content="Free digital loyalty cards for coffee shops, gyms, cinemas and every shop in between."><meta property="og:image" content="wallet/assets/coffee.jpg">
-<link rel="stylesheet" href="landing.css"><link rel="stylesheet" href="./language.css"><script src="./config.js"></script><script src="./locale.js"></script></head>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="stylesheet" href="landing.css"><link rel="stylesheet" href="./language.css"><script src="./config.js"></script><script src="./locale.js"></script></head>
 <body data-page="landing">
 <header class="nav"><a class="brand" href="./"><i aria-hidden="true"></i>CardYeung</a>
  <nav><a href="#how">How it works</a><a href="#shops">For shops</a><a href="#faq">FAQ</a></nav>
- <div class="navend"><button type="button" class="lang" data-locale-toggle>English</button><a class="btn dark sm" data-telegram href="wallet/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.1.4-1 1.9.1 2.2l4.6 1.4 1.8 5.6c.3.9 1.4 1.1 2 .4l2.6-2.7 4.6 3.4c.8.6 1.9.1 2.1-.9l3-14.9c.3-1.1-.9-2-2.2-1.7Z" fill="currentColor"/></svg><span>Open wallet</span></a></div></header>
+ <div class="navend"><button type="button" class="lang install" data-install hidden>Install app</button><button type="button" class="lang" data-locale-toggle>English</button><a class="btn dark sm" data-telegram href="wallet/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.1.4-1 1.9.1 2.2l4.6 1.4 1.8 5.6c.3.9 1.4 1.1 2 .4l2.6-2.7 4.6 3.4c.8.6 1.9.1 2.1-.9l3-14.9c.3-1.1-.9-2-2.2-1.7Z" fill="currentColor"/></svg><span>Open wallet</span></a></div></header>
 <main>
 <section class="hero">
  <div class="copy">
@@ -110,6 +110,8 @@
 </main>
 <footer><a class="brand" href="./"><i aria-hidden="true"></i>CardYeung</a><span>Free for shops and cardholders.</span><a href="admin/" class="muted">Admin</a></footer>
 <script>
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();var b=document.querySelector('[data-install]');if(!b)return;b.hidden=false;b.onclick=function(){e.prompt();b.hidden=true}});
 (function(){var bot=(window.CARDYEUNG||{}).bot;if(!bot)return;document.querySelectorAll('[data-telegram]').forEach(function(a){a.href='https://t.me/'+bot;var s=a.querySelector('span');if(s)s.textContent='Open in Telegram'})})();
 </script>
 </body></html>

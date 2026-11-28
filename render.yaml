@@ -1,0 +1,22 @@
+# Render Blueprint: one free Docker web service. The database is Neon's free Postgres (paste its URL as DATABASE_URL).
+services:
+  - type: web
+    name: cardyeung
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL      # Neon connection string, ends with ?sslmode=require
+        sync: false
+      - key: BOT_TOKEN         # from BotFather
+        sync: false
+      - key: BOT_USERNAME      # without @
+        sync: false
+      - key: WEBHOOK_SECRET    # 16+ letters, digits, _ or -
+        sync: false
+      - key: ADMIN_PASSWORD    # 12+ characters
+        sync: false
+      - key: APP_URL           # https://<service>.onrender.com/
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true

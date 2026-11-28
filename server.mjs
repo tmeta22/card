@@ -37,25 +37,28 @@ export async function lookup(db,owner,shop,member){
  if(!card)reject('Member not found in your program.',404);return card;
 }
 export async function change(root,user,op,b){
- const request=field(b,'requestId',64);
+ const request=field(b,'requestId',64);let out=null;
  await root.tx(async db=>{
  if(await db.get('SELECT 1 FROM requests WHERE customer=? AND request=?',user,request))return;
  const event=(customer,card,label,delta)=>db.run('INSERT INTO events(customer,name,category,label,delta,at) VALUES(?,?,?,?,?,?)',customer,card.name,card.category,label,delta,Date.now());
  if(op==='create'||op==='manual'){
  const name=field(b,'name'),category=field(b,'category');if(!categories.includes(category))reject('Choose a category.');
- if(op==='create'){const target=Number(b.target);if(!Number.isInteger(target)||target<2||target>50)reject('Choose 2 to 50 stamps.');await db.run('INSERT INTO shops(code,owner,name,category,target,reward,created) VALUES(?,?,?,?,?,?,?)',token(),user,name,category,target,field(b,'reward'),Date.now())}
- else{await db.run('INSERT INTO cards(member,customer,name,category,number,created) VALUES(?,?,?,?,?,?)',token(),user,name,category,field(b,'number',64),Date.now());await event(user,{name,category},'Membership saved','New card')}
+ if(op==='create'){const target=Number(b.target);if(!Number.isInteger(target)||target<2||target>50)reject('Choose 2 to 50 stamps.');await db.run('INSERT INTO shops(code,owner,name,category,target,reward,created) VALUES(?,?,?,?,?,?,?)',token(),user,name,category,target,field(b,'reward'),Date.now());out={kind:op,customer:user,owner:user,name}}
+ else{await db.run('INSERT INTO cards(member,customer,name,category,number,created) VALUES(?,?,?,?,?,?)',token(),user,name,category,field(b,'number',64),Date.now());await event(user,{name,category},'Membership saved','New card');out={kind:op,customer:user,owner:user,name}}
  }else if(op==='join'){
  const shop=await db.get('SELECT * FROM shops WHERE code=?',field(b,'code').toUpperCase());if(!shop)reject('Shop code not found.',404);
  if(await db.get('SELECT 1 FROM cards WHERE customer=? AND code=?',user,shop.code))reject('This program is already in your wallet.',409);
  await db.run('INSERT INTO cards(member,customer,code,created) VALUES(?,?,?,?)',token(),user,shop.code,Date.now());await event(user,shop,'Program joined','New card');
+ out={kind:'join',customer:user,owner:shop.owner,name:shop.name,members:(await db.get('SELECT COUNT(*) AS n FROM cards WHERE code=?',shop.code)).n};
  }else if(op==='redeem'||op==='stamp'){
- const card=await db.get('SELECT c.member,c.customer,c.stamps,s.target,s.name,s.category FROM cards c JOIN shops s ON s.code=c.code WHERE c.member=? AND s.code=? AND s.owner=?'+db.lock,field(b,'member').toUpperCase(),field(b,'shop'),user);if(!card)reject('Member not found in your program.',404);
+ const card=await db.get('SELECT c.member,c.customer,c.stamps,s.target,s.name,s.category,s.reward FROM cards c JOIN shops s ON s.code=c.code WHERE c.member=? AND s.code=? AND s.owner=?'+db.lock,field(b,'member').toUpperCase(),field(b,'shop'),user);if(!card)reject('Member not found in your program.',404);
  const redeem=op==='redeem';if(redeem&&card.stamps<card.target)reject('More stamps are needed.');if(!redeem&&card.stamps>=card.target)reject('Redeem the current reward first.');
  await db.run('UPDATE cards SET stamps=? WHERE member=?',redeem?0:card.stamps+1,card.member);await event(card.customer,card,redeem?'Reward redeemed':'Stamp earned',redeem?'Redeemed':'+1 stamp');
+ out={kind:op,customer:card.customer,owner:user,name:card.name,reward:card.reward,stamps:redeem?0:card.stamps+1,target:card.target};
  }else reject('Unknown action.',404);
  await db.run('INSERT INTO requests VALUES(?,?)',user,request);
  });
+ return out;
 }
 
 const stripCode=v=>String(v||'').toUpperCase().replace(/[^A-F0-9]/g,'');
@@ -114,6 +117,59 @@ function adminLogin(req,password){
  const exp=String(Date.now()+12*3600000);return 'cy_admin='+exp+'.'+createHmac('sha256',adminKey()).update(exp).digest('base64url')+'; HttpOnly; SameSite=Strict; Path=/admin; Max-Age=43200'+(process.env.APP_URL?.startsWith('https')?'; Secure':'');
 }
 async function body(req){let text='';for await(const part of req){text+=part;if(text.length>32768)reject('Request too large.',413)}try{return JSON.parse(text)}catch{reject('Invalid JSON.')}}
+// ---------- live updates and notifications ----------
+const kh=v=>String(v).replace(/\d/g,d=>'០១២៣៤៥៦៧៨៩'[d]);
+export function notice(out,lang){
+ const km=lang!=='en',n=v=>km?kh(v):String(v);
+ if(out.kind==='stamp')return out.stamps>=out.target
+  ?(km?'🎁 រង្វាន់របស់អ្នកនៅ '+out.name+' រួចរាល់ហើយ៖ '+out.reward+'។ បង្ហាញកាតនៅបញ្ជរ។':'🎁 Your reward at '+out.name+' is ready: '+out.reward+'. Show your card at the counter.')
+  :(km?'⭐ +១ ត្រា នៅ '+out.name+' — '+n(out.stamps)+'/'+n(out.target)+'។ នៅសល់ '+n(out.target-out.stamps)+' ទៀតដើម្បីទទួលរង្វាន់។':'⭐ +1 stamp at '+out.name+' — '+out.stamps+'/'+out.target+'. '+(out.target-out.stamps)+' more for your reward.');
+ if(out.kind==='redeem')return km?'🎉 បានប្ដូររង្វាន់នៅ '+out.name+'។ សូមរីករាយ! កាតថ្មីបានចាប់ផ្ដើមហើយ។':'🎉 Reward redeemed at '+out.name+'. Enjoy! A fresh card has started.';
+ if(out.kind==='join')return km?'👋 សមាជិកថ្មីបានចូលរួម '+out.name+' — សរុប '+n(out.members)+' នាក់។':'👋 New member joined '+out.name+' — '+out.members+' in total.';
+ return null;
+}
+const streams=new Map();
+export function publish(user,payload){for(const res of streams.get(user)||[])res.write('data: '+JSON.stringify(payload)+'\n\n')}
+function subscribe(user,req,res){
+ res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-store','Connection':'keep-alive','X-Accel-Buffering':'no'});res.write('retry: 4000\n\n');
+ const set=streams.get(user)||new Set();set.add(res);streams.set(user,set);
+ const beat=setInterval(()=>res.write(': ping\n\n'),25000);
+ req.on('close',()=>{clearInterval(beat);set.delete(res);if(!set.size)streams.delete(user)});
+}
+async function announce(db,out){
+ if(!out)return;
+ const targets=out.kind==='join'?[[out.customer,false],[out.owner,true]]:out.kind==='stamp'||out.kind==='redeem'?[[out.customer,true],[out.owner,false]]:[[out.customer,false]];
+ for(const [user,message] of targets){
+  publish(user,{type:out.kind,name:out.name,stamps:out.stamps,target:out.target,mine:user===out.customer});
+  if(!message||!process.env.BOT_TOKEN||user===out.owner&&out.kind!=='join')continue;
+  const pref=await db.get('SELECT lang,muted FROM languages WHERE customer=?',user);if(pref?.muted)continue;
+  const text=notice(out,pref?.lang);if(!text)continue;
+  const button=process.env.APP_URL?{reply_markup:{inline_keyboard:[[{text:pref?.lang==='en'?'Open wallet':'បើកកាបូបកាត',web_app:{url:new URL('wallet/',process.env.APP_URL).href}}]]}}:{};
+  telegram('sendMessage',{chat_id:user,text,...button}).catch(()=>{});
+ }
+}
+// Signed session for the installed web app outside Telegram (Telegram Login Widget).
+const sessionKey=()=>createHash('sha256').update('session:'+(process.env.SESSION_SECRET||process.env.BOT_TOKEN||'')).digest();
+export function issueSession(user,days=30){const body=Buffer.from(user+'.'+(Date.now()+days*864e5)).toString('base64url');return body+'.'+createHmac('sha256',sessionKey()).update(body).digest('base64url')}
+export function sessionUser(tokenValue){
+ const [body,sig]=String(tokenValue||'').split('.');if(!body||!sig)reject('Please sign in again.',401);
+ const want=createHmac('sha256',sessionKey()).update(body).digest('base64url');if(want.length!==sig.length||!timingSafeEqual(Buffer.from(want),Buffer.from(sig)))reject('Please sign in again.',401);
+ const [user,exp]=Buffer.from(body,'base64url').toString().split('.');if(!(Number(exp)>Date.now())||!/^\d+$/.test(user))reject('Please sign in again.',401);return user;
+}
+export function widgetUser(data,botToken){
+ if(!botToken)reject('The Telegram bot has not been configured on this server.',503);
+ const fields=Object.entries(data||{}).filter(([k,v])=>k!=='hash'&&v!==undefined&&v!==null).map(([k,v])=>k+'='+v).sort().join('\n');
+ const want=createHmac('sha256',createHash('sha256').update(botToken).digest()).update(fields).digest('hex'),hash=String(data?.hash||'');
+ const age=Date.now()/1000-Number(data?.auth_date);
+ if(!/^[a-f0-9]{64}$/.test(hash)||!timingSafeEqual(Buffer.from(want,'hex'),Buffer.from(hash,'hex'))||!(age<86400&&age>-60)||!Number.isSafeInteger(Number(data.id)))reject('Telegram sign-in could not be verified.',401);
+ return String(data.id);
+}
+function authenticate(req){
+ const raw=req.headers.authorization||'';
+ if(raw.startsWith('tma '))return telegramUser(raw.slice(4),process.env.BOT_TOKEN);
+ if(raw.startsWith('Bearer '))return sessionUser(raw.slice(7));
+ reject('Open this wallet in Telegram.',401);
+}
 async function telegram(method,data){const response=await fetch('https://api.telegram.org/bot'+process.env.BOT_TOKEN+'/'+method,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!response.ok)reject('Telegram request failed.',502)}
 export function app(db){return createServer(async(req,res)=>{
  const path=new URL(req.url,'http://localhost').pathname;
@@ -124,31 +180,34 @@ export function app(db){return createServer(async(req,res)=>{
  if(!process.env.WEBHOOK_SECRET||req.headers['x-telegram-bot-api-secret-token']!==process.env.WEBHOOK_SECRET)reject('Unauthorized.',403);
  const msg=(await body(req)).message;if(msg?.chat.type==='private'&&msg.from.id===msg.chat.id){
  const user=String(msg.from.id);await touch(db,user);const command=(msg.text||'').split(' ')[0].toLowerCase();
+ if(command==='/mute'||command==='/unmute')await db.run('INSERT INTO languages(customer,lang,muted) VALUES(?,?,?) ON CONFLICT(customer) DO UPDATE SET muted=excluded.muted',user,'km',command==='/mute'?1:0);
  if(command==='/english'||command==='/khmer')await db.run('INSERT INTO languages(customer,lang) VALUES(?,?) ON CONFLICT(customer) DO UPDATE SET lang=excluded.lang',user,command==='/english'?'en':'km');
  const joinCode=command==='/start'&&/^[A-F0-9]{14}$/i.test((msg.text||'').split(' ')[1]||'')?(msg.text.split(' ')[1]).toUpperCase():'';
  const khmer=(await db.get('SELECT lang FROM languages WHERE customer=?',user))?.lang!=='en';
  const cards=(await wallet(db,user)).cards, digits=v=>khmer?String(v).replace(/\d/g,d=>'០១២៣៤៥៦៧៨៩'[d]):String(v);
  const summary=cards.slice(0,25).map(c=>c.name+' · '+(c.manual?c.number:digits(c.stamps)+'/'+digits(c.target)+(khmer?' ត្រា':' stamps'))).join('\n');
  const welcome=khmer?'សូមស្វាគមន៍មកកាន់ CardYeung។ បើកកាបូបកាត ដើម្បីចូលរួមកម្មវិធីរបស់ហាង ឬបង្កើតកម្មវិធីសន្សំត្រាផ្ទាល់ខ្លួន។':'Welcome to CardYeung. Open your wallet to join a shop or create a loyalty program.';
- await telegram('sendMessage',{chat_id:msg.chat.id,text:(summary||welcome)+'\n\n/khmer · /english',reply_markup:{inline_keyboard:[[{text:khmer?'កាបូបកាតរបស់ខ្ញុំ':'My wallet',web_app:{url:new URL('wallet/'+(joinCode?'?join='+joinCode:''),process.env.APP_URL).href}}]]}})}
+ await telegram('sendMessage',{chat_id:msg.chat.id,text:(command==='/mute'?(khmer?'🔕 បានបិទការជូនដំណឹង។ /unmute ដើម្បីបើកវិញ។':'🔕 Notifications off. /unmute to turn them back on.')+'\n\n':command==='/unmute'?(khmer?'🔔 បានបើកការជូនដំណឹង។':'🔔 Notifications on.')+'\n\n':'')+(summary||welcome)+'\n\n/khmer · /english · /mute',reply_markup:{inline_keyboard:[[{text:khmer?'កាបូបកាតរបស់ខ្ញុំ':'My wallet',web_app:{url:new URL('wallet/'+(joinCode?'?join='+joinCode:''),process.env.APP_URL).href}}]]}})}
  return json({ok:true});
  }
  if(path==='/admin'){res.writeHead(301,{Location:'/admin/'});return res.end()}
  if(path==='/admin/api/login'&&req.method==='POST'){const cookie=adminLogin(req,(await body(req)).password);res.writeHead(200,{'Content-Type':'application/json','Set-Cookie':cookie,'Cache-Control':'no-store'});return res.end('{"ok":true}')}
  if(path==='/admin/api/stats'){if(!adminCookie(req))reject('Sign in required.',401);return json(await adminStats(db))}
+ if(path==='/api/auth/widget'&&req.method==='POST'){const data=await body(req),user=widgetUser(data,process.env.BOT_TOKEN);await touch(db,user);return json({token:issueSession(user),user:{first_name:String(data.first_name||'').slice(0,64),photo_url:/^https:\/\//.test(data.photo_url||'')?String(data.photo_url):''}})}
+ if(path==='/api/config'&&req.method==='GET')return json({bot:/^\w{4,64}$/.test(process.env.BOT_USERNAME||'')?process.env.BOT_USERNAME:null});
  if(path.startsWith('/api/')){
- const raw=req.headers.authorization||'';if(!raw.startsWith('tma '))reject('Open this wallet in Telegram.',401);const user=telegramUser(raw.slice(4),process.env.BOT_TOKEN);await touch(db,user);
- const query=new URL(req.url,'http://localhost').searchParams;
+ const query=new URL(req.url,'http://localhost').searchParams;const user=authenticate(req);await touch(db,user);
+ if(path==='/api/live'&&req.method==='GET')return subscribe(user,req,res);
  if(path==='/api/wallet'&&req.method==='GET')return json({...await wallet(db,user),account:await account(db,user),bot:/^\w{4,64}$/.test(process.env.BOT_USERNAME||'')?process.env.BOT_USERNAME:null});
  if(path==='/api/preview'&&req.method==='GET')return json(await preview(db,query.get('code')));
  if(path==='/api/lookup'&&req.method==='GET')return json(await lookup(db,user,query.get('shop'),query.get('member')));if(req.method!=='POST')reject('Method not allowed.',405);
  if(path==='/api/account/recovery')return json({code:await issueRecovery(db,user)});
  if(path==='/api/account/recover')return json({code:await recover(db,user,(await body(req)).code)});
- await change(db,user,path.slice(5),await body(req));return json({ok:true});
+ await announce(db,await change(db,user,path.slice(5),await body(req))).catch(()=>{});return json({ok:true});
  }
  if(req.method!=='GET'&&req.method!=='HEAD')reject('Method not allowed.',405);
  const file=resolve(root,'.'+decodeURIComponent(path)+(path.endsWith('/')?'index.html':''));if(!file.startsWith(resolve(root)+sep))reject('Not found.',404);
- const data=await readFile(file);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.jpg':'image/jpeg'})[extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);
+ const data=await readFile(file);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webmanifest':'application/manifest+json','.json':'application/json'})[extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);
  }catch(e){json({error:e.status?e.message:e.code==='ENOENT'?'Not found.':'Unable to complete the request.'},e.status||(e.code==='ENOENT'?404:500))}
 })}
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
