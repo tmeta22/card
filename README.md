@@ -10,7 +10,7 @@ Use Node.js 22.5 or newer (the container uses 24). Run `npm install`, then `npm 
 
 1. **Database:** create a free project at neon.com and copy its connection string (it ends with `?sslmode=require`).
 2. **App:** in Render choose *New → Blueprint*, pick this repository, and fill in the variables from `render.yaml` (`DATABASE_URL`, `BOT_TOKEN`, `BOT_USERNAME`, `WEBHOOK_SECRET`, `ADMIN_PASSWORD`; `APP_URL` is the `https://….onrender.com/` address Render gives you). It builds the `Dockerfile`; `/healthz` checks the database.
-3. **Telegram:** run `node server.mjs --configure-bot` once with `BOT_TOKEN`, `APP_URL` and `WEBHOOK_SECRET` set. In BotFather run `/setdomain` with the Render host so *Sign in with Telegram* works in the installed web app, and set the bot as the Main Mini App for `startapp` join links.
+3. **Telegram:** the app registers its webhook on every start in production (`--configure-bot` does the same by hand) with `BOT_TOKEN`, `APP_URL` and `WEBHOOK_SECRET` set. In BotFather run `/setdomain` with the Render host so *Sign in with Telegram* works in the installed web app, and set the bot as the Main Mini App for `startapp` join links.
 4. **Landing page:** GitHub Pages can keep serving `docs/`; set `bot` in `docs/config.js` so its buttons open the bot.
 
 Render's free web service sleeps after about 15 idle minutes and takes up to a minute to wake, so the first bot reply after a quiet spell is slow. Move to a paid instance when a shop depends on it at the counter.
